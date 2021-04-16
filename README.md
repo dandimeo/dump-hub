@@ -6,6 +6,8 @@ Self hosted search engine for data leaks and password dumps. Upload and parse mu
    
 **Disclaimer:** *This project does not include, and will never include, any data. Data must be uploaded by end users on their own instances of Dump Hub. I take no responsability for the nature of uploaded data.*  
 
+<img src="demo/demo.png"/>  
+
 ## Running with Docker
 Dump Hub can be executed by using docker-compose:
 ```
