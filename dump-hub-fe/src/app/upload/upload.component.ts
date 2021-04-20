@@ -85,9 +85,7 @@ export class UploadComponent implements OnInit {
         this.uploadStatus = 2;
         window.scroll(0, 0);
       },
-      (err: HttpErrorResponse) => {
-        this.uploadStatus = -1;
-      }
+      _ => this.uploadStatus = -1
     );
   }
 

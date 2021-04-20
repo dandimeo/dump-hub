@@ -7,26 +7,26 @@
 
 <clr-modal [(clrModalOpen)]="historyError">
   <h3 class="modal-title">
-      <cds-icon shape="error-standard" size=30 solid></cds-icon>&nbsp;History error
+    <cds-icon shape="error-standard" size=30 solid></cds-icon>&nbsp;History error
   </h3>
   <div class="modal-body">
-      <p>{{ errorMessage }}</p>
+    <p>{{ errorMessage }}</p>
   </div>
   <div class="modal-footer">
-      <button type="button" class="btn btn-primary" (click)="historyError = false">Ok</button>
+    <button type="button" class="btn btn-primary" (click)="historyError = false">Ok</button>
   </div>
 </clr-modal>
 
 <clr-modal [(clrModalOpen)]="deleteModal">
   <h3 class="modal-title">
-      <cds-icon shape="exclamation-triangle" size=30 solid></cds-icon>&nbsp;Delete items
+    <cds-icon shape="exclamation-triangle" size=30 solid></cds-icon>&nbsp;Delete items
   </h3>
   <div class="modal-body">
-      <p>Do you want to delete all entries associated with {{toDelete}}?</p>
+    <p>Do you want to delete all entries associated with {{toDelete}}?</p>
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-primary" (click)="onDeleteCancel()">Cancel</button>
-      <button type="button" class="btn btn-danger" (click)="onDelete()">Delete</button>      
+    <button type="button" class="btn btn-danger" (click)="onDelete()">Delete</button>
   </div>
 </clr-modal>
 
