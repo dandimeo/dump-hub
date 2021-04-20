@@ -23,65 +23,17 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import (
-	"context"
-	"log"
-	"strconv"
-	"sync"
-	"time"
-
-	"github.com/olivere/elastic/v7"
-)
+import "log"
 
 /*
-Client :: Elasticsearch client object
+waitGreen :: Wait for cluster green status
 */
-type Client struct {
-	client *elastic.Client
-	ctx    context.Context
-	ip     string
-	port   int
-}
-
-/*
-New :: New client for Elasticsearch API
-*/
-func New(ip string, port int) *Client {
-	e := &Client{
-		ip:   ip,
-		port: port,
-	}
-
-	conn := "http://" + e.ip + ":" + strconv.Itoa(e.port)
-	log.Println("Waiting for elasticsearch node...")
-	client, err := elastic.NewClient(elastic.SetURL(conn))
-	for err != nil {
-		client, err = elastic.NewClient(
-			elastic.SetURL(conn),
-			elastic.SetHealthcheckTimeoutStartup(30*time.Second),
-			elastic.SetSniff(false),
-		)
-	}
-	log.Println("Connected to elasticsearch!")
-	e.client = client
-	e.ctx = context.Background()
-
-	err = e.CreateIndex("dump-hub", entryMapping)
+func (eClient *Client) waitGreen() {
+	log.Println("Waiting for cluster green status...")
+	_, err := eClient.client.ClusterHealth().
+		WaitForGreenStatus().
+		Do(eClient.ctx)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
-	err = e.CreateIndex("dump-hub-history", historyMapping)
-	if err != nil {
-		log.Fatal(err)
-	}
-	e.waitGreen()
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go e.cleanHistory(&wg)
-	go cleanTmp(&wg)
-	wg.Wait()
-
-	return e
 }
