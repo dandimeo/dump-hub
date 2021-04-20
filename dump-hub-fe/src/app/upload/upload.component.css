@@ -33,3 +33,7 @@
 .selected-column {
   background-color: #d7fcd5cc;
 }
+
+.table-container {
+  overflow-x: auto;
+}

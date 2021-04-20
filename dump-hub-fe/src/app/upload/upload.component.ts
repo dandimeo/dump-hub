@@ -85,7 +85,7 @@ export class UploadComponent implements OnInit {
         this.uploadStatus = 2;
         window.scroll(0, 0);
       },
-      (err: HttpErrorResponse) => {     
+      (err: HttpErrorResponse) => {
         this.uploadStatus = -1;
       }
     );
@@ -212,7 +212,7 @@ export class UploadComponent implements OnInit {
     this.fileContent = this.fileContentRaw.split(/[\r\n]+/g);
 
     this.previewContent = [];
-    for (var i = 0; i < this.fileContent.length - 1; i++) {
+    for (var i = 0; i < this.fileContent.length; i++) {
       if (this.previewContent.length >= 20) {
         break;
       }

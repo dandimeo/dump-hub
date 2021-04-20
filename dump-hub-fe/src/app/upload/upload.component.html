@@ -77,35 +77,36 @@
     </div>
   </div>
 
-
-  <table class="table">
-    <thead>
-      <tr>
-        <th *ngFor="let n of counter(previewTableMaxCols); let i = index;">
-          <a (click)="toggleColumn(i)">
-            <clr-icon *ngIf="!isSelected(i)" shape="plus-circle" size="20"></clr-icon>
-            <clr-icon *ngIf="isSelected(i)" shape="minus-circle" size="20"></clr-icon>
-          </a>
-        </th>
-      </tr>
-    </thead>
-    <tbody *ngIf="previewTable.length">
-      <tr *ngFor="let row of previewTable">
-        <td *ngFor="let value of row; let i = index;" [class.selected-column]="isSelected(i)">
-          {{ value }}
-        </td>
-      </tr>
-    </tbody>
-    <tbody *ngIf="!previewTable.length">
-      <tr>
-        <td colspan="5" class="no-items">
-          <clr-icon shape="file" size="100"></clr-icon>
-          <br><br><br>
-          <b>Select a file to enable parser preview</b>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th *ngFor="let n of counter(previewTableMaxCols); let i = index;">
+            <a (click)="toggleColumn(i)">
+              <clr-icon *ngIf="!isSelected(i)" shape="plus-circle" size="20"></clr-icon>
+              <clr-icon *ngIf="isSelected(i)" shape="minus-circle" size="20"></clr-icon>
+            </a>
+          </th>
+        </tr>
+      </thead>
+      <tbody *ngIf="previewTable.length">
+        <tr *ngFor="let row of previewTable">
+          <td *ngFor="let value of row; let i = index;" [class.selected-column]="isSelected(i)">
+            {{ value }}
+          </td>
+        </tr>
+      </tbody>
+      <tbody *ngIf="!previewTable.length">
+        <tr>
+          <td colspan="5" class="no-items">
+            <clr-icon shape="file" size="100"></clr-icon>
+            <br><br><br>
+            <b>Select a file to enable parser preview</b>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <div class="clr-form-control" style="float: right;">
     <button class="btn btn-primary" type="submit" [disabled]="!this.uploadForm.valid">Upload file</button>
