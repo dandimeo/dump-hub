@@ -34,7 +34,7 @@ To upload a new file manually use the upload page and select the desired file. T
 * **Separator:** This is the separator character. This char will be used to split entries on line (just like a standard csv).    
 * **Comment character:** Lines starting with this character will not be parsed and will not be displayed in the preview box.  
      
-If the parser is correctly configured you will be able to see parsed items as columns in the table at the bottom of the page. From this table you can select which columns will be parsed and included in the final document (highlighted in green). Each of those fields will be indexed as text and will be fully searchable.
+If the parser is correctly configured you will be able to see parsed items as columns in the table at the bottom of the page. From this table you can select which columns will be parsed and included in the final document (highlighted in green). Each of those fields will be indexed and fully searchable.
 
 ## License
 The MIT License (MIT)

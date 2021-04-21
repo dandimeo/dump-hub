@@ -177,7 +177,7 @@ func processFile(e *elastic.Client, p *parser.Parser, fn string, fp string, cs s
 	/* Start uploader routines */
 	var wg sync.WaitGroup
 	quitChan := make(chan struct{})
-	entryChan := make(chan map[string]string)
+	entryChan := make(chan *common.Entry)
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		go uploader(i, &wg, e, quitChan, entryChan)
 	}
@@ -208,11 +208,10 @@ func processFile(e *elastic.Client, p *parser.Parser, fn string, fp string, cs s
 /*
 uploader :: Upload entries to elastic
 */
-func uploader(id int, wg *sync.WaitGroup, e *elastic.Client, quitChan <-chan struct{}, entryChan <-chan map[string]string) {
+func uploader(id int, wg *sync.WaitGroup, e *elastic.Client, quitChan <-chan struct{}, entryChan <-chan *common.Entry) {
 	wg.Add(1)
-	log.Printf("Starting uploader #%d\n", id)
 	run := true
-	chunk := []map[string]string{}
+	chunk := []*common.Entry{}
 
 	for run {
 		/* Chunk size reached */
@@ -221,7 +220,7 @@ func uploader(id int, wg *sync.WaitGroup, e *elastic.Client, quitChan <-chan str
 			if err != nil {
 				log.Println(err)
 			}
-			chunk = []map[string]string{}
+			chunk = []*common.Entry{}
 		}
 
 		select {
@@ -245,5 +244,4 @@ func uploader(id int, wg *sync.WaitGroup, e *elastic.Client, quitChan <-chan str
 	}
 
 	wg.Done()
-	log.Printf("Shutting down uploader #%d\n", id)
 }

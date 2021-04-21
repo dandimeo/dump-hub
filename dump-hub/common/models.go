@@ -24,6 +24,15 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 /*
+Entry :: Entry document
+*/
+type Entry struct {
+	Origin   string   `json:"origin"`
+	OriginID string   `json:"origin_id"`
+	Data     []string `json:"data"`
+}
+
+/*
 History :: Dump Hub History document
 */
 type History struct {
@@ -45,6 +54,6 @@ type HistoryData struct {
 SearchResult :: Search API response
 */
 type SearchResult struct {
-	Results []map[string]string `json:"results"`
-	Tot     int                 `json:"tot"`
+	Results []Entry `json:"results"`
+	Tot     int     `json:"tot"`
 }

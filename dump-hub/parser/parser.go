@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/x0e1f/dump-hub/common"
 )
 
 /*
@@ -71,8 +73,9 @@ func New(pattern string, columnsRaw string) (*Parser, error) {
 /*
 ParseEntry :: Parse dump entry from file
 */
-func (p *Parser) ParseEntry(filename string, checkSum string, entry string) map[string]string {
-	obj := make(map[string]string)
+func (p *Parser) ParseEntry(filename string, checkSum string, entry string) *common.Entry {
+	obj := &common.Entry{}
+	data := []string{}
 
 	/* If line empty */
 	if len(entry) < 1 {
@@ -100,8 +103,7 @@ func (p *Parser) ParseEntry(filename string, checkSum string, entry string) map[
 		/* Add value only if index in column */
 		for _, column := range p.columns {
 			if i == column {
-				key := "t" + strconv.Itoa(i)
-				obj[key] = match
+				data = append(data, match)
 			}
 		}
 	}
@@ -112,8 +114,9 @@ func (p *Parser) ParseEntry(filename string, checkSum string, entry string) map[
 	}
 
 	/* Set origin fields */
-	obj["origin"] = filename
-	obj["origin_id"] = checkSum
+	obj.Origin = filename
+	obj.OriginID = checkSum
+	obj.Data = data
 
 	return obj
 }

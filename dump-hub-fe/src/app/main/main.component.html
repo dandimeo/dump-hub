@@ -14,7 +14,8 @@
         <cds-icon shape="error-standard" size=30 solid></cds-icon>&nbsp;Search error
     </h3>
     <div class="modal-body">
-        <p>Unable to retrieve search results<p>
+        <p>Unable to retrieve search results
+        <p>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-primary" (click)="searchError = false">Ok</button>
@@ -25,9 +26,9 @@
     <tbody *ngIf="results.length">
         <tr *ngFor="let result of results">
             <td class="entry">
-                {{result.origin}} ({{result.origin_id}})
-                <ng-container *ngFor="let item of result | keyvalue">
-                    <code *ngIf="item.key != 'origin' && item.key != 'origin_id'">{{item.value}}</code><br>
+                {{result.origin}} ({{result.origin_id}})<br>
+                <ng-container *ngFor="let value of result.data">
+                    <code>{{value}}</code><br>
                 </ng-container>
             </td>
         </tr>

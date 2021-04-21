@@ -77,7 +77,6 @@ export class MainComponent implements OnInit {
           if (data.results && data.tot) {
             this.results = data.results;
             this.pagConfig.total = data.tot;
-            window.scroll(0, 0);
           }
           this.loadingResult = false;
         },

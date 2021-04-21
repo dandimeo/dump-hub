@@ -58,7 +58,7 @@ func (eClient *Client) CreateIndex(index string, mapping string) error {
 /*
 BulkInsert :: Elasticsearch Bulk API
 */
-func (eClient *Client) BulkInsert(e []map[string]string) error {
+func (eClient *Client) BulkInsert(e []*common.Entry) error {
 	bulkRequest := eClient.client.Bulk()
 
 	for _, entry := range e {
@@ -284,7 +284,7 @@ func (eClient *Client) Search(queryString string, from int, size int) (*common.S
 	/* Populate search results */
 	searchResult := common.SearchResult{}
 	for _, hit := range results.Hits.Hits {
-		entry := map[string]string{}
+		entry := common.Entry{}
 		err := json.Unmarshal(hit.Source, &entry)
 		if err != nil {
 			log.Println(err)
