@@ -33,11 +33,11 @@ export class ApiService {
   /*************************************************
   * API Endpoints
   *************************************************/
-  private UPLOAD = environment.baseAPI + "upload";
-  private SEARCH = environment.baseAPI + "search";
-  private HISTORY = environment.baseAPI + "history";
-  private DELETE = environment.baseAPI + "delete";
-  
+  private UPLOAD = environment.baseAPI + 'upload';
+  private SEARCH = environment.baseAPI + 'search';
+  private HISTORY = environment.baseAPI + 'history';
+  private DELETE = environment.baseAPI + 'delete';
+
   constructor(
     private httpClient: HttpClient
   ) { }
@@ -47,23 +47,23 @@ export class ApiService {
   }
 
   public search(query: string, page: number) {
-    var data = {
-      "query": query,
-      "page": page
+    const data = {
+      query,
+      page
     };
     return this.httpClient.post(this.SEARCH, data);
   }
 
   public getHistory(page: number) {
-    var data = {
-      "page": page
+    const data = {
+      page
     };
     return this.httpClient.post(this.HISTORY, data);
   }
 
   public delete(checkSum: string) {
-    var data = {
-      "checksum": checkSum
+    const data = {
+      checkSum
     };
     return this.httpClient.post(this.DELETE, data);
   }
