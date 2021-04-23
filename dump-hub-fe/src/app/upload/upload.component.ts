@@ -21,7 +21,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../api.service';
@@ -43,15 +42,16 @@ export class UploadComponent implements OnInit {
     commentChar: new FormControl('', Validators.required)
   });
 
-  uploadStatus: number = 0;
-  editPatternModal: boolean = false;
+  uploadStatus = 0;
+  editPatternModal = false;
+
   fileContent: string[] = [];
   fileContentRaw: any;
   selectedFile: any;
 
   previewContent: string[] = [];
   previewTable: string[][] = [];
-  previewTableMaxCols: number = 0;
+  previewTableMaxCols = 0;
 
   constructor(
     private apiService: ApiService
@@ -59,15 +59,15 @@ export class UploadComponent implements OnInit {
 
   ngOnInit(): void {
     this.patternForm.setValue({
-      separator: ":",
-      commentChar: "#"
+      separator: ':',
+      commentChar: '#'
     });
     this.patternString();
 
     this.uploadForm.controls.pattern.disable();
     this.uploadForm.get('file')?.setValue(null);
     this.uploadForm.get('columns')?.setValue([]);
-    this.previewContent = ["Select a text file to enable preview..."]
+    this.previewContent = ['Select a text file to enable preview...']
 
     this.onPatternChange();
     this.onCommentChange();
@@ -80,97 +80,59 @@ export class UploadComponent implements OnInit {
     formData.append('columns', this.uploadForm.get('columns')?.value);
     this.uploadStatus = 1;
 
-    this.apiService.upload(formData).subscribe(
-      (_) => {
-        this.uploadStatus = 2;
-        window.scroll(0, 0);
-      },
-      _ => this.uploadStatus = -1
-    );
+    this.apiService.upload(formData)
+      .subscribe(
+        (_) => {
+          this.uploadStatus = 2;
+        },
+        _ => this.uploadStatus = -1
+      );
   }
 
   public onFileSelect(event: any): void {
-    this.uploadForm.get('file')!.setValue(null);
-    this.uploadForm.get('columns')?.setValue([]);
-    this.previewContent = ["Loading file..."]
+    this.uploadForm.controls.file.setValue(null);
+    this.uploadForm.controls.columns.setValue([]);
+    this.previewContent = ['Loading file...'];
 
     if (event.target.files.length > 0) {
       const file = event.target.files[0];
-      if (!file.type.startsWith("text/")) {
-        this.previewContent = ["Invalid file type.", "Please upload a text file."]
-        this.uploadForm.get('file')!.setValue(null);
-        return
+      if (!file.type.startsWith('text/')) {
+        this.previewContent = ['Invalid file type.'];
+        this.uploadForm.controls.file.setValue(null);
+        return;
       }
-      this.uploadForm.get('file')!.setValue(file);
+
+      this.uploadForm.controls.file.setValue(file);
       this.readFile();
     }
   }
 
   public patternString(): void {
-    var separator = this.patternForm.get('separator')?.value;
-    var commentChar = this.patternForm.get('commentChar')?.value;
+    const separator = this.patternForm.get('separator')?.value;
+    const commentChar = this.patternForm.get('commentChar')?.value;
 
-    var value = `{${separator}}{${commentChar}}`;
-    this.uploadForm.get('pattern')!.setValue(value);
-  }
-
-  public parsePreview(): void {
-    if (this.uploadForm.get('file')?.value == null) {
-      return;
-    }
-    var separator = this.patternForm.get('separator')?.value;
-
-    this.previewTable = [];
-    this.previewTableMaxCols = 0;
-
-    /* Get max column number */
-    this.previewContent.forEach(content => {
-      var values = content.replace(' ', '').split(separator);
-      if (values.length > this.previewTableMaxCols) {
-        this.previewTableMaxCols = values.length;
-      }
-    })
-
-    /* Get table values */
-    this.previewContent.forEach(content => {
-      let tableRow: string[] = [];
-
-      /* Init tableRow */
-      for (var i = 0; i < this.previewTableMaxCols; i++) {
-        tableRow[i] = "N/A";
-      }
-
-      var values = content.replace(' ', '').split(separator);
-      for (var j = 0; j < values.length; j++) {
-        if (values[j].length > 1) {
-          tableRow[j] = values[j];
-        }
-      }
-
-      this.previewTable.push(tableRow);
-    });
-
-    this.uploadForm.get('columns')?.setValue([]);
+    const value = `{${separator}}{${commentChar}}`;
+    this.uploadForm.controls.pattern.setValue(value);
   }
 
   public loadingModal(): boolean {
-    return this.uploadStatus != 0;
+    return this.uploadStatus !== 0;
   }
 
-  public counter(i: number) {
+  public counter(i: number): Array<number> {
     return new Array(i);
   }
 
-  public isSelected(colNumber: number) {
-    var selected: number[] = this.uploadForm.get('columns')?.value;
-    if (selected.indexOf(colNumber) !== -1) {
-      return true;
+  public isSelected(colNumber: number): boolean {
+    const selected: number[] = this.uploadForm.get('columns')?.value;
+    if (selected.indexOf(colNumber) === -1) {
+      return false;
     }
-    return false;
+    return true;
   }
 
-  public toggleColumn(colNumber: number) {
-    var selected: number[] = this.uploadForm.get('columns')?.value;
+  public toggleColumn(colNumber: number): void {
+    const selected = this.uploadForm.get('columns')?.value;
     if (this.isSelected(colNumber)) {
       const index: number = selected.indexOf(colNumber);
       if (index !== -1) {
@@ -187,52 +149,90 @@ export class UploadComponent implements OnInit {
 
   private readFile(): void {
     this.fileContentRaw = null;
-    var file = this.uploadForm.get('file')!.value;
+    const file = this.uploadForm.get('file')?.value;
     if (file == null) {
       return;
     }
 
-    var reader: FileReader = new FileReader();
+    const reader: FileReader = new FileReader();
     reader.readAsText(file.slice(0, 8192));
     reader.onloadend = () => {
-      this.fileContentRaw = reader.result
+      this.fileContentRaw = reader.result;
       this.processPreview();
     };
 
     reader.onerror = () => {
-      this.uploadForm.get('file')!.setValue(null);
-      this.previewContent = ["Unable to read the input file."]
-      return
+      this.uploadForm.controls.file.setValue(null);
+      this.previewContent = ['Unable to read the input file.'];
+      return;
+    };
+  }
+
+  private parsePreview(): void {
+    if (this.uploadForm.get('file')?.value == null) {
+      return;
     }
+    const separator = this.patternForm.get('separator')?.value;
+
+    this.previewTable = [];
+    this.previewTableMaxCols = 0;
+    this.previewContent.forEach(content => {
+      const values = content.replace(' ', '').split(separator);
+      if (values.length > this.previewTableMaxCols) {
+        this.previewTableMaxCols = values.length;
+      }
+    });
+
+    this.previewContent.forEach(content => {
+      const tableRow: string[] = [];
+      for (let i = 0; i < this.previewTableMaxCols; i++) {
+        tableRow[i] = 'N/A';
+      }
+
+      const values = content.replace(' ', '').split(separator);
+      for (let j = 0; j < values.length; j++) {
+        if (values[j].length > 1) {
+          tableRow[j] = values[j];
+        }
+      }
+
+      this.previewTable.push(tableRow);
+    });
+
+    this.uploadForm.get('columns')?.setValue([]);
   }
 
   private processPreview(): void {
     this.fileContent = this.fileContentRaw.split(/[\r\n]+/g);
 
     this.previewContent = [];
-    for (var i = 0; i < this.fileContent.length; i++) {
+
+    for (const content of this.fileContent) {
       if (this.previewContent.length >= 20) {
         break;
       }
-      var commenctChar = this.patternForm.get('commentChar')?.value;
-      if (this.fileContent[i].replace(' ', '').charAt(0) == commenctChar) {
+
+      const commentChar = this.patternForm.get('commentChar')?.value;
+      if (content.replace(' ', '').charAt(0) === commentChar) {
         continue;
       }
-      this.previewContent.push(this.fileContent[i]);
+      this.previewContent.push(content);
     }
 
     this.parsePreview();
   }
 
   private onPatternChange(): void {
-    this.uploadForm.get('pattern')!.valueChanges.subscribe(_ => {
-      this.parsePreview();
-    });
+    this.uploadForm.get('pattern')?.valueChanges
+      .subscribe(_ => {
+        this.parsePreview();
+      });
   }
 
   private onCommentChange(): void {
-    this.patternForm.get('commentChar')!.valueChanges.subscribe(_ => {
-      this.processPreview();
-    });
+    this.patternForm.get('commentChar')?.valueChanges
+      .subscribe(_ => {
+        this.processPreview();
+      });
   }
 }

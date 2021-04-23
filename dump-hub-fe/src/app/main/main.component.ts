@@ -26,14 +26,14 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { ApiService } from '../api.service';
 
 interface SearchResponse {
-  results?: any[],
-  tot?: number
+  results?: any[];
+  tot?: number;
 }
 
 interface PagConfig {
-  currentPage: number,
-  pageSize: number,
-  total: number
+  currentPage: number;
+  pageSize: number;
+  total: number;
 }
 
 @Component({
@@ -45,9 +45,10 @@ export class MainComponent implements OnInit {
   searchForm = new FormGroup({
     query: new FormControl(),
   });
-  loadingResult: boolean = false;
-  searchError: boolean = false;
+  searchError = false;
+
   results: any[] = [];
+  loadingResult = false;
   pagConfig: PagConfig;
 
   constructor(
@@ -57,7 +58,7 @@ export class MainComponent implements OnInit {
       currentPage: 1,
       pageSize: 20,
       total: 0
-    }
+    };
   }
 
   ngOnInit(): void {
@@ -67,13 +68,14 @@ export class MainComponent implements OnInit {
   }
 
   public search(): void {
-    var query = this.searchForm.get("query")?.value;
+    const query = this.searchForm.get('query')?.value;
     this.loadingResult = true;
 
-    this.apiService.search(query, this.pagConfig.currentPage)
+    this.apiService
+      .search(query, this.pagConfig.currentPage)
       .subscribe(
         (data: SearchResponse) => {
-          this.results = [];          
+          this.results = [];
           if (data.results && data.tot) {
             this.results = data.results;
             this.pagConfig.total = data.tot;
@@ -85,12 +87,12 @@ export class MainComponent implements OnInit {
           this.loadingResult = false;
           this.searchError = true;
         }
-      )
+      );
   }
 
   public pageChange(newPage: number): void {
     this.pagConfig.currentPage = newPage;
-    this.search()
+    this.search();
   }
 
   private initPaginator(): void {
@@ -98,13 +100,16 @@ export class MainComponent implements OnInit {
       currentPage: 1,
       pageSize: 20,
       total: 0
-    }
+    };
   }
 
   private onQueryChange(): void {
-    this.searchForm.get('query')!.valueChanges.subscribe(_ => {
-      this.initPaginator();
-      this.search();
-    });
+    this.searchForm.get('query')?.valueChanges.
+      subscribe(
+        _ => {
+          this.initPaginator();
+          this.search();
+        }
+      );
   }
 }
