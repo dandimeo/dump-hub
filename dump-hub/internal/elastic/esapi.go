@@ -29,7 +29,7 @@ import (
 	"log"
 
 	"github.com/olivere/elastic/v7"
-	"github.com/x0e1f/dump-hub/common"
+	"github.com/x0e1f/dump-hub/internal/common"
 )
 
 /*

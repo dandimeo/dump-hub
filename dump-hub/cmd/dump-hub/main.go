@@ -26,9 +26,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 import (
 	"fmt"
 
-	"github.com/x0e1f/dump-hub/api"
-	"github.com/x0e1f/dump-hub/common"
-	"github.com/x0e1f/dump-hub/elastic"
+	"github.com/x0e1f/dump-hub/internal/api"
+	"github.com/x0e1f/dump-hub/internal/common"
+	"github.com/x0e1f/dump-hub/internal/elastic"
 )
 
 func main() {

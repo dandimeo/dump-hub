@@ -1,4 +1,4 @@
-package elastic
+package api
 
 /*
 The MIT License (MIT)
@@ -24,64 +24,31 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import (
-	"context"
+	"encoding/json"
 	"log"
-	"strconv"
-	"sync"
-	"time"
+	"net/http"
 
-	"github.com/olivere/elastic/v7"
+	"github.com/x0e1f/dump-hub/internal/common"
+	"github.com/x0e1f/dump-hub/internal/elastic"
 )
 
 /*
-Client :: Elasticsearch client object
+delete :: Delete entry from elasticsearch
 */
-type Client struct {
-	client *elastic.Client
-	ctx    context.Context
-	ip     string
-	port   int
-}
+func delete(eClient *elastic.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var deleteReq common.DeleteReq
 
-/*
-New :: New client for Elasticsearch API
-*/
-func New(ip string, port int) *Client {
-	e := &Client{
-		ip:   ip,
-		port: port,
+		err := json.NewDecoder(r.Body).Decode(&deleteReq)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "", http.StatusBadRequest)
+			return
+		}
+
+		checkSum := deleteReq.Checksum
+		go eClient.DeleteEntries(checkSum)
+
+		w.WriteHeader(http.StatusOK)
 	}
-
-	conn := "http://" + e.ip + ":" + strconv.Itoa(e.port)
-	log.Println("Waiting for elasticsearch node...")
-	client, err := elastic.NewClient(elastic.SetURL(conn))
-	for err != nil {
-		client, err = elastic.NewClient(
-			elastic.SetURL(conn),
-			elastic.SetHealthcheckTimeoutStartup(30*time.Second),
-			elastic.SetSniff(false),
-		)
-	}
-	log.Println("Connected to elasticsearch!")
-	e.client = client
-	e.ctx = context.Background()
-
-	err = e.CreateIndex("dump-hub", entryMapping)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = e.CreateIndex("dump-hub-history", historyMapping)
-	if err != nil {
-		log.Fatal(err)
-	}
-	e.waitGreen()
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go e.cleanHistory(&wg)
-	go cleanTmp(&wg)
-	wg.Wait()
-
-	return e
 }

@@ -49,7 +49,5 @@ bin/
 # Volumes
 volumes/data/*
 !volumes/data/.gitkeep
-volumes/drop-box/*
-!volumes/drop-box/.gitkeep
-volumes/temp/*
-!volumes/temp/.gitkeep
+volumes/uploads/*
+!volumes/uploads/.gitkeep

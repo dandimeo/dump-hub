@@ -1,4 +1,4 @@
-package api
+package elastic
 
 /*
 The MIT License (MIT)
@@ -24,49 +24,64 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import (
+	"context"
 	"log"
-	"net/http"
 	"strconv"
+	"sync"
+	"time"
 
-	"github.com/gorilla/mux"
-	"github.com/x0e1f/dump-hub/elastic"
+	"github.com/olivere/elastic/v7"
 )
 
 /*
-Engine :: Core API Engine
+Client :: Elasticsearch client object
 */
-type Engine struct {
-	host    string
-	port    int
-	baseAPI string
-	router  *mux.Router
-	eClient *elastic.Client
+type Client struct {
+	client *elastic.Client
+	ctx    context.Context
+	ip     string
+	port   int
 }
 
-const pageSize = 20
-
 /*
-New :: Create the Api Engine object
+New :: New client for Elasticsearch API
 */
-func New(host string, port int, baseAPI string, eClient *elastic.Client) *Engine {
-	log.Println("Initializing engine...")
-	engine := &Engine{
-		host:    host,
-		port:    port,
-		baseAPI: baseAPI,
-		eClient: eClient,
+func New(ip string, port int) *Client {
+	e := &Client{
+		ip:   ip,
+		port: port,
 	}
-	engine.defineRoutes()
 
-	return engine
-}
+	conn := "http://" + e.ip + ":" + strconv.Itoa(e.port)
+	log.Println("Waiting for elasticsearch node...")
+	client, err := elastic.NewClient(elastic.SetURL(conn))
+	for err != nil {
+		client, err = elastic.NewClient(
+			elastic.SetURL(conn),
+			elastic.SetHealthcheckTimeoutStartup(30*time.Second),
+			elastic.SetSniff(false),
+		)
+	}
+	log.Println("Connected to elasticsearch!")
+	e.client = client
+	e.ctx = context.Background()
 
-/*
-Serve :: Serve API
-*/
-func (engine *Engine) Serve() {
-	log.Printf("Serving API on %s:%d", engine.host, engine.port)
+	err = e.CreateIndex("dump-hub", entryMapping)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = e.CreateIndex("dump-hub-uploads", uploadMapping)
+	if err != nil {
+		log.Fatal(err)
+	}
+	e.waitGreen()
 
-	addr := engine.host + ":" + strconv.Itoa(engine.port)
-	log.Fatal(http.ListenAndServe(addr, engine.router))
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go e.cleanHistory(&wg)
+	go cleanTmp(&wg)
+	wg.Wait()
+
+	return e
 }

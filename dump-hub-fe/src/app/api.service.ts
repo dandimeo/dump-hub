@@ -1,70 +1,51 @@
-/*
-The MIT License (MIT)
-Copyright (c) 2021 Davide Pataracchia
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following
-conditions:
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-*/
-
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ApiService {
-
-  /*************************************************
-  * API Endpoints
-  *************************************************/
   private UPLOAD = environment.baseAPI + 'upload';
   private SEARCH = environment.baseAPI + 'search';
   private HISTORY = environment.baseAPI + 'history';
   private DELETE = environment.baseAPI + 'delete';
+  private FILES = environment.baseAPI + 'files';
 
-  constructor(
-    private httpClient: HttpClient
-  ) { }
+  constructor(private httpClient: HttpClient) {}
 
-  public upload(data: FormData) {
+  public uploadChunk(data: FormData): Observable<any> {
     return this.httpClient.post(this.UPLOAD, data);
   }
 
-  public search(query: string, page: number) {
+  public search(query: string, page: number): Observable<any> {
     const data = {
       query,
-      page
+      page,
     };
     return this.httpClient.post(this.SEARCH, data);
   }
 
-  public getHistory(page: number) {
+  public getHistory(page: number): Observable<any> {
     const data = {
-      page
+      page,
     };
     return this.httpClient.post(this.HISTORY, data);
   }
 
-  public delete(checkSum: string) {
+  public delete(checkSum: string): Observable<any> {
     const data = {
-      checkSum
+      checkSum,
     };
     return this.httpClient.post(this.DELETE, data);
+  }
+
+  public getFiles(): Observable<any> {
+    return this.httpClient.get(this.FILES);
+  }
+
+  public deleteFile(id: string): Observable<any> {
+    return this.httpClient.delete(this.FILES + '/' + id);
   }
 }

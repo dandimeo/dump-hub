@@ -1,13 +1,5 @@
 package api
 
-import (
-	"encoding/json"
-	"log"
-	"net/http"
-
-	"github.com/x0e1f/dump-hub/elastic"
-)
-
 /*
 The MIT License (MIT)
 Copyright (c) 2021 Davide Pataracchia
@@ -31,32 +23,33 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-type historyReq struct {
-	Page int `json:"page"`
-}
+import (
+	"encoding/base64"
+	"encoding/json"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+
+	"github.com/gorilla/mux"
+	"github.com/x0e1f/dump-hub/internal/common"
+	"github.com/x0e1f/dump-hub/internal/elastic"
+)
 
 /*
-getHistory :: Get history documents
+files :: Get files in upload folder (GET)
 */
-func getHistory(eClient *elastic.Client) http.HandlerFunc {
+func files(eClient *elastic.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var historyReq historyReq
+		var results common.FilesResult
 
-		err := json.NewDecoder(r.Body).Decode(&historyReq)
+		files, err := readUploadFolder()
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "", http.StatusBadRequest)
-			return
 		}
+		results.Files = files
 
-		from := pageSize * (historyReq.Page - 1)
-		historyData, err := eClient.GetHistory(from, pageSize)
-		if err != nil {
-			log.Printf("(ERROR) (%s) %s", r.URL, err)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-		response, err := json.Marshal(historyData)
+		response, err := json.Marshal(results)
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
 			log.Println(err)
@@ -66,5 +59,34 @@ func getHistory(eClient *elastic.Client) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(response)
+	}
+}
+
+/*
+deleteFile :: Delete file in upload folder (DELETE)
+*/
+func deleteFile(eClient *elastic.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		id := params["id"]
+
+		data, err := base64.
+			StdEncoding.
+			DecodeString(id)
+		if err != nil {
+			http.Error(w, "", http.StatusBadRequest)
+			log.Println(err)
+			return
+		}
+		fileName := string(data)
+
+		fileName = encodeFilename(fileName)
+		filePath := filepath.Join(uploadFolder, fileName)
+		err = os.Remove(filePath)
+		if err != nil {
+			http.Error(w, "", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
 	}
 }

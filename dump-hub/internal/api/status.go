@@ -28,46 +28,32 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/x0e1f/dump-hub/elastic"
+	"github.com/x0e1f/dump-hub/internal/common"
+	"github.com/x0e1f/dump-hub/internal/elastic"
 )
 
-type searchReq struct {
-	Query string `json:"query"`
-	Page  int    `json:"page"`
-}
-
 /*
-search :: Search API (POST) - Querystring
+getHistory :: Get history documents
 */
-func search(eClient *elastic.Client) http.HandlerFunc {
+func getHistory(eClient *elastic.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var searchReq searchReq
+		var historyReq common.HistoryReq
 
-		err := json.NewDecoder(r.Body).Decode(&searchReq)
+		err := json.NewDecoder(r.Body).Decode(&historyReq)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
 
-		query := "*"
-		if len(searchReq.Query) > 0 {
-			query = searchReq.Query
-		}
-
-		from := pageSize * (searchReq.Page - 1)
-		results, err := eClient.Search(
-			string(query),
-			from,
-			pageSize,
-		)
+		from := pageSize * (historyReq.Page - 1)
+		historyData, err := eClient.GetHistory(from, pageSize)
 		if err != nil {
+			log.Printf("(ERROR) (%s) %s", r.URL, err)
 			http.Error(w, "", http.StatusInternalServerError)
-			log.Println(err)
 			return
 		}
-
-		response, err := json.Marshal(results)
+		response, err := json.Marshal(historyData)
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
 			log.Println(err)

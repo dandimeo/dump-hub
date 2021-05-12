@@ -26,55 +26,44 @@ OTHER DEALINGS IN THE SOFTWARE.
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/x0e1f/dump-hub/internal/elastic"
 )
 
 /*
-defineRoutes :: Define API routes and handlers
+Engine :: Core API Engine
 */
-func (engine *Engine) defineRoutes() {
-	router := mux.NewRouter().StrictSlash(true)
-	router.Use(accessLogger)
-
-	router.
-		Name("Upload").
-		Path(engine.baseAPI + "upload").
-		Methods(http.MethodPost).
-		HandlerFunc(upload(engine.eClient))
-
-	router.
-		Name("History").
-		Path(engine.baseAPI + "history").
-		Methods(http.MethodPost).
-		HandlerFunc(getHistory(engine.eClient))
-
-	router.
-		Name("Search").
-		Path(engine.baseAPI + "search").
-		Methods(http.MethodPost).
-		HandlerFunc(search(engine.eClient))
-
-	router.
-		Name("Delete").
-		Path(engine.baseAPI + "delete").
-		Methods(http.MethodPost).
-		HandlerFunc(delete(engine.eClient))
-
-	engine.router = router
+type Engine struct {
+	host    string
+	port    int
+	baseAPI string
+	router  *mux.Router
+	eClient *elastic.Client
 }
 
 /*
-accessLogger :: Access log middleware
+New :: Create the Api Engine object
 */
-func accessLogger(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf(
-			"(%s) %s %s",
-			r.Host,
-			r.UserAgent(),
-			r.URL,
-		)
-		next.ServeHTTP(w, r)
-	})
+func New(host string, port int, baseAPI string, eClient *elastic.Client) *Engine {
+	log.Println("Initializing engine...")
+	engine := &Engine{
+		host:    host,
+		port:    port,
+		baseAPI: baseAPI,
+		eClient: eClient,
+	}
+	engine.defineRoutes()
+
+	return engine
+}
+
+/*
+Serve :: Serve API
+*/
+func (engine *Engine) Serve() {
+	log.Printf("Serving API on %s:%d", engine.host, engine.port)
+	addr := engine.host + ":" + strconv.Itoa(engine.port)
+	log.Fatal(http.ListenAndServe(addr, engine.router))
 }

@@ -8,14 +8,14 @@ import { MainComponent } from './main/main.component';
 import { UploadComponent } from './upload/upload.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { StatusComponent } from './status/status.component';
+import { FileViewComponent } from './file-view/file-view.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     MainComponent,
     UploadComponent,
-    StatusComponent,
+    FileViewComponent,
   ],
   imports: [
     BrowserModule,
@@ -27,6 +27,6 @@ import { StatusComponent } from './status/status.component';
     HttpClientModule,
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

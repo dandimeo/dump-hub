@@ -1,0 +1,84 @@
+<clr-modal [clrModalOpen]="errorModal()">
+  <h3 class="modal-title">
+    <cds-icon shape="error-standard" size="30" solid></cds-icon>&nbsp;Error
+  </h3>
+  <div class="modal-body">
+    <p>{{ fileError }}</p>
+    <p></p>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-primary" (click)="fileError = null">
+      Ok
+    </button>
+  </div>
+</clr-modal>
+
+<clr-modal [(clrModalOpen)]="deleteModal">
+  <h3 class="modal-title">
+    <cds-icon shape="exclamation-triangle" size="30" solid></cds-icon
+    >&nbsp;Delete file
+  </h3>
+  <div class="modal-body">
+    <p>Do you want to delete {{ toDelete?.filename }}?</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-primary" (click)="onDeleteCancel()">
+      Cancel
+    </button>
+    <button type="button" class="btn btn-danger" (click)="onDelete()">
+      Delete
+    </button>
+  </div>
+</clr-modal>
+
+<div class="progress loop" *ngIf="loadingFiles">
+  <progress></progress>
+</div>
+<div class="progress top" *ngIf="!loadingFiles">
+  <progress value="0" max="100"></progress>
+</div>
+
+<div class="file-browser">
+  <table class="table">
+    <tbody>
+      <tr>
+        <td class="folder" colspan="2">
+          <clr-icon shape="folder" size="25"></clr-icon>
+          &nbsp;
+          <b>Uploads</b>&nbsp;<code>({{ uploadPath }})</code>
+        </td>
+      </tr>
+      <ng-container *ngIf="files.length">
+        <ng-container *ngFor="let file of files">
+          <tr>
+            <td class="file">
+              <clr-icon shape="file" size="25"></clr-icon>
+              &nbsp;
+              <b>{{ file.filename }}</b
+              >&nbsp;
+              <b> {{ file.size }} MB</b>
+            </td>
+            <td class="delete-button">
+              <a (click)="openDelete(file)">
+                <clr-icon shape="trash" size="20"></clr-icon>
+              </a>
+            </td>
+          </tr>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="!files.length">
+        <tr>
+          <td colspan="5" class="no-items">
+            <br />
+            <clr-icon shape="folder-open" size="70"></clr-icon>
+            <br /><br />
+            <b>Empty</b>
+            <br /><br />
+          </td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>

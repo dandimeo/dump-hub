@@ -28,7 +28,7 @@ const entryMapping = `
 }
 `
 
-const historyMapping = `
+const uploadMapping = `
 {
   "settings": {
     "number_of_shards": 1,

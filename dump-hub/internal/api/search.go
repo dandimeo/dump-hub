@@ -28,30 +28,50 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/x0e1f/dump-hub/elastic"
+	"github.com/x0e1f/dump-hub/internal/common"
+	"github.com/x0e1f/dump-hub/internal/elastic"
 )
 
-type deleteReq struct {
-	Checksum string `json:"checksum"`
-}
-
 /*
-delete :: Delete entry from elasticsearch
+search :: Search API (POST) - Querystring
 */
-func delete(eClient *elastic.Client) http.HandlerFunc {
+func search(eClient *elastic.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var deleteReq deleteReq
+		var searchReq common.SearchReq
 
-		err := json.NewDecoder(r.Body).Decode(&deleteReq)
+		err := json.NewDecoder(r.Body).Decode(&searchReq)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
 
-		checkSum := deleteReq.Checksum
-		go eClient.DeleteEntries(checkSum)
+		query := "*"
+		if len(searchReq.Query) > 0 {
+			query = searchReq.Query
+		}
 
+		from := pageSize * (searchReq.Page - 1)
+		results, err := eClient.Search(
+			string(query),
+			from,
+			pageSize,
+		)
+		if err != nil {
+			http.Error(w, "", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		response, err := json.Marshal(results)
+		if err != nil {
+			http.Error(w, "", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+		w.Write(response)
 	}
 }

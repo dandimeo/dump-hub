@@ -43,6 +43,14 @@ type History struct {
 }
 
 /*
+File :: File in uploads folder
+*/
+type File struct {
+	FileName string `json:"filename"`
+	Size     int64  `json:"size"`
+}
+
+/*
 HistoryData :: Dump Hub History API Response
 */
 type HistoryData struct {
@@ -51,9 +59,38 @@ type HistoryData struct {
 }
 
 /*
+SearchReq :: Search API request
+*/
+type SearchReq struct {
+	Query string `json:"query"`
+	Page  int    `json:"page"`
+}
+
+/*
 SearchResult :: Search API response
 */
 type SearchResult struct {
 	Results []Entry `json:"results"`
 	Tot     int     `json:"tot"`
+}
+
+/*
+HistoryReq :: History API request
+*/
+type HistoryReq struct {
+	Page int `json:"page"`
+}
+
+/*
+FilesResult :: Files API response
+*/
+type FilesResult struct {
+	Files []File `json:"files"`
+}
+
+/*
+DeleteReq :: Delete API request
+*/
+type DeleteReq struct {
+	Checksum string `json:"checksum"`
 }

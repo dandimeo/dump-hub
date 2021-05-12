@@ -28,7 +28,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/x0e1f/dump-hub/common"
+	"github.com/x0e1f/dump-hub/internal/common"
 )
 
 /*
