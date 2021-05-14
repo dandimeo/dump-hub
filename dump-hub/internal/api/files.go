@@ -43,6 +43,7 @@ func files(eClient *elastic.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var results common.FilesResult
 
+		results.Dir = uploadFolder
 		files, err := readUploadFolder()
 		if err != nil {
 			log.Println(err)

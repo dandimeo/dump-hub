@@ -11,6 +11,7 @@ import * as uuid from 'uuid';
 })
 export class UploadComponent implements OnInit {
   fileError: string | null = null;
+  uploadPath: string = '';
   fileQueue: SelectedFile[] = [];
   files: FileObj[] = [];
   loadingFiles = true;
@@ -24,6 +25,7 @@ export class UploadComponent implements OnInit {
   private getFiles(): void {
     this.apiService.getFiles().subscribe(
       (data: Files) => {
+        this.uploadPath = data.dir;
         this.files = [];
         if (data.files) {
           this.fileError = null;

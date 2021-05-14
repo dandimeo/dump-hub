@@ -85,6 +85,7 @@ type HistoryReq struct {
 FilesResult :: Files API response
 */
 type FilesResult struct {
+	Dir   string `json:"dir"`
 	Files []File `json:"files"`
 }
 

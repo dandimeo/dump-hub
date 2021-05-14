@@ -77,9 +77,9 @@ func New(ip string, port int) *Client {
 	e.waitGreen()
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(1)
 
-	go e.cleanHistory(&wg)
+	//go e.cleanHistory(&wg)
 	go cleanTmp(&wg)
 	wg.Wait()
 

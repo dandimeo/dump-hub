@@ -19,7 +19,7 @@ export class FileViewComponent implements OnInit {
 
   constructor(private apiService: ApiService) {
     this.loadingFiles = true;
-    this.uploadPath = 'test'; // TO REMOVE
+    this.uploadPath = '';
     this.fileError = null;
     this.files = [];
   }
@@ -30,6 +30,7 @@ export class FileViewComponent implements OnInit {
     this.apiService.getFiles().subscribe(
       (data: Files) => {
         this.files = [];
+        this.uploadPath = data.dir;
         if (data.files) {
           this.files = data.files;
           this.fileError = null;

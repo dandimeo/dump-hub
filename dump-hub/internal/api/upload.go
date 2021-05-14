@@ -31,7 +31,9 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/x0e1f/dump-hub/internal/elastic"
 )
 
@@ -86,9 +88,6 @@ func upload(eClient *elastic.Client) http.HandlerFunc {
 			return
 		}
 
-		/* Limit File Type */
-		// TODO
-
 		/* Limit File Size */
 		if fileSize > maxFileSize {
 			log.Println("(ERROR) MAX_FILE_SIZE reached")
@@ -114,6 +113,20 @@ func upload(eClient *elastic.Client) http.HandlerFunc {
 			offset,
 			buf.Bytes(),
 		)
+
+		/* Limit File Type */
+		mtype, err := mimetype.DetectFile(filePath)
+		if err != nil {
+			log.Printf("(ERROR) %s", err)
+			http.Error(w, "Unable to detect mimetype", http.StatusInternalServerError)
+			return
+		}
+		if !strings.Contains(mtype.String(), "text/") {
+			log.Println("(ERROR) Invalid file type!")
+			http.Error(w, "Invalid file type", http.StatusBadRequest)
+			os.Remove(filePath)
+			return
+		}
 
 		/* Upload completed */
 		if (offset + int(metadata.Size)) == fileSize {

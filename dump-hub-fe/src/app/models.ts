@@ -4,6 +4,7 @@ export interface FileObj {
 }
 
 export interface Files {
+  dir: string;
   files?: FileObj[];
 }
 
