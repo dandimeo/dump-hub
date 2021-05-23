@@ -1,1 +1,105 @@
-<p>data works!</p>
+<clr-modal [(clrModalOpen)]="deleteModal">
+  <h3 class="modal-title">
+    <cds-icon shape="exclamation-triangle" size="30" solid></cds-icon
+    >&nbsp;Delete items
+  </h3>
+  <div class="modal-body">
+    <p>
+      Do you want to delete all entries associated with
+      {{ toDelete?.filename }}?
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-primary" (click)="onDeleteCancel()">
+      Cancel
+    </button>
+    <button type="button" class="btn btn-danger" (click)="onDelete()">
+      Delete
+    </button>
+  </div>
+</clr-modal>
+
+<div class="progress loop" *ngIf="loadingStatus">
+  <progress></progress>
+</div>
+<div class="progress top" *ngIf="!loadingStatus">
+  <progress value="0" max="100"></progress>
+</div>
+<table class="table">
+  <tbody>
+    <tr>
+      <td class="folder" colspan="4">
+        <clr-icon shape="block" size="25"></clr-icon>
+        &nbsp;<b>Data</b>
+      </td>
+    </tr>
+    <ng-container *ngIf="uploads.length">
+      <ng-container *ngFor="let upload of uploads">
+        <tr>
+          <td style="text-align: left; padding-top: 1.2em">
+            <b>{{ upload.filename }}</b> &nbsp;
+            <code>({{ upload.checksum }})</code>
+          </td>
+          <td style="text-align: left; padding-top: 1.2em">
+            {{ upload.date }}
+          </td>
+          <td>
+            <ng-container *ngIf="upload.status == 0">
+              <clr-spinner [clrSmall]="true"></clr-spinner
+              >&nbsp;&nbsp;Processing...
+            </ng-container>
+            <ng-container *ngIf="upload.status == 1">
+              <cds-icon shape="check-circle" size="20"></cds-icon>&nbsp;Complete
+            </ng-container>
+            <ng-container *ngIf="upload.status == 2">
+              <clr-spinner [clrSmall]="true"></clr-spinner>&nbsp;&nbsp;Deleting
+              Items...
+            </ng-container>
+            <ng-container *ngIf="upload.status == -1">
+              <cds-icon shape="exclamation-circle" size="20"></cds-icon
+              >&nbsp;Processing Error
+            </ng-container>
+          </td>
+          <td style="text-align: right; padding-top: 1.2em">
+            <a
+              [class.disabled]="upload.status == 0 || upload.status == 2"
+              (click)="onDeleteRequest(upload)"
+            >
+              <clr-icon shape="trash" size="20"></clr-icon>
+            </a>
+          </td>
+        </tr>
+      </ng-container>
+    </ng-container>
+    <ng-container *ngIf="!uploads.length">
+      <tr>
+        <td colspan="5" class="no-items">
+          <br />
+          <clr-icon shape="block" size="70"></clr-icon>
+          <br /><br />
+          <code>NO DATA</code>
+          <br /><br />
+        </td>
+      </tr>
+    </ng-container>
+  </tbody>
+</table>
+<div class="pagination-container" *ngIf="uploads.length">
+  <a
+    class="page-control"
+    (click)="pageChange(pagConfig.currentPage - 1)"
+    [class.disabled]="pagConfig.currentPage == 1"
+  >
+    &lt;&lt; Previous
+  </a>
+  <b class="page-current">{{ pagConfig.currentPage }}</b>
+  <a
+    class="page-control"
+    (click)="pageChange(pagConfig.currentPage + 1)"
+    [class.disabled]="
+      !(pagConfig.total >= pagConfig.pageSize * pagConfig.currentPage)
+    "
+  >
+    Next &gt;&gt;
+  </a>
+</div>

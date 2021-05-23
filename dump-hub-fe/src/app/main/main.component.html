@@ -14,22 +14,6 @@
   <progress value="0" max="100"></progress>
 </div>
 
-<clr-modal [(clrModalOpen)]="searchError">
-  <h3 class="modal-title">
-    <cds-icon shape="error-standard" size="30" solid></cds-icon>&nbsp;Error
-  </h3>
-  <div class="modal-body">
-    <p>Unable to retrieve search results</p>
-    <p></p>
-  </div>
-
-  <div class="modal-footer">
-    <button type="button" class="btn btn-primary" (click)="searchError = false">
-      Ok
-    </button>
-  </div>
-</clr-modal>
-
 <table class="table">
   <tbody *ngIf="results.length">
     <tr *ngFor="let result of results">
@@ -47,7 +31,7 @@
       <td colspan="5" class="no-items">
         <clr-icon shape="filter-off" size="150"></clr-icon>
         <br /><br />
-        <b>No Data</b>
+        <code>NO DATA</code>
       </td>
     </tr>
   </tbody>

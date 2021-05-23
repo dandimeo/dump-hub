@@ -10,7 +10,6 @@ import * as uuid from 'uuid';
   styleUrls: ['./upload.component.css'],
 })
 export class UploadComponent implements OnInit {
-  fileError: string | null = null;
   uploadPath: string = '';
   fileQueue: SelectedFile[] = [];
   files: FileObj[] = [];
@@ -23,21 +22,14 @@ export class UploadComponent implements OnInit {
   }
 
   private getFiles(): void {
-    this.apiService.getFiles().subscribe(
-      (data: Files) => {
-        this.uploadPath = data.dir;
-        this.files = [];
-        if (data.files) {
-          this.fileError = null;
-
-          this.files = data.files;
-          this.loadingFiles = false;
-        }
-      },
-      (_) => {
-        this.fileError = 'Unable to retrieve folder content';
+    this.apiService.getFiles().subscribe((data: Files) => {
+      this.uploadPath = data.dir;
+      this.files = [];
+      if (data.files) {
+        this.files = data.files;
+        this.loadingFiles = false;
       }
-    );
+    });
   }
 
   public onSelect(event: any): void {
@@ -101,7 +93,10 @@ export class UploadComponent implements OnInit {
           }
         },
         (err: HttpErrorResponse) => {
-          selectedFile.error = err.error;
+          selectedFile.error = 'Unknown error';
+          if (typeof err.error === 'string') {
+            selectedFile.error = err.error;
+          }
           this.getFiles();
           return;
         }

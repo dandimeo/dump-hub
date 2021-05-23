@@ -9,13 +9,17 @@ import { UploadComponent } from './upload/upload.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { FileViewComponent } from './file-view/file-view.component';
+import { DataComponent } from './data/data.component';
+import { AnalyzeComponent } from './analyze/analyze.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     MainComponent,
     UploadComponent,
+    DataComponent,
     FileViewComponent,
+    AnalyzeComponent,
   ],
   imports: [
     BrowserModule,

@@ -24,36 +24,43 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import (
+	"bufio"
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/x0e1f/dump-hub/internal/common"
-	"github.com/x0e1f/dump-hub/internal/elastic"
 )
 
-/*
-getStatus :: Get Upload Status
-*/
-func getStatus(eClient *elastic.Client) http.HandlerFunc {
+func previewFile() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var statusReq common.StatusReq
+		var previewReq common.PreviewReq
 
-		err := json.NewDecoder(r.Body).Decode(&statusReq)
+		err := json.NewDecoder(r.Body).Decode(&previewReq)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
 
-		from := pageSize * (statusReq.Page - 1)
-		statusData, err := eClient.GetStatus(from, pageSize)
+		fileName := common.EncodeFilename(previewReq.FileName)
+		filePath := filepath.Join(uploadFolder, fileName)
+		previewData, err := readPreview(
+			filePath,
+			previewReq.Start,
+		)
 		if err != nil {
-			log.Printf("(ERROR) (%s) %s", r.URL, err)
+			log.Println(err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
-		response, err := json.Marshal(statusData)
+
+		preview := common.PreviewResult{
+			Preview: *previewData,
+		}
+		response, err := json.Marshal(preview)
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
 			log.Println(err)
@@ -64,4 +71,37 @@ func getStatus(eClient *elastic.Client) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Write(response)
 	}
+}
+
+func readPreview(filePath string, start int) (*[]string, error) {
+	previewData := []string{}
+
+	if start < 0 {
+		start = 0
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	currentLine := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		if currentLine >= (start + previewSize) {
+			break
+		}
+
+		if currentLine >= start {
+			previewData = append(previewData, line)
+		}
+		currentLine++
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return &previewData, nil
 }

@@ -35,6 +35,11 @@ import (
 )
 
 /*
+ChunkSize :: BulkAPI chunk size
+*/
+const ChunkSize = 1000
+
+/*
 cleanTmp :: Clean tmp folder
 */
 func cleanTmp(wg *sync.WaitGroup) {
@@ -82,7 +87,7 @@ func (eClient *Client) cleanHistory(wg *sync.WaitGroup) {
 		}
 
 		for _, hit := range result.Hits.Hits {
-			err = eClient.UpdateHistoryStatus(hit.Id, -1)
+			err = eClient.UpdateUploadStatus(hit.Id, -1)
 			if err != nil {
 				log.Println(err)
 			}
@@ -112,7 +117,7 @@ func (eClient *Client) cleanHistory(wg *sync.WaitGroup) {
 		}
 
 		for _, hit := range result.Hits.Hits {
-			err = eClient.UpdateHistoryStatus(hit.Id, -1)
+			err = eClient.UpdateUploadStatus(hit.Id, -1)
 			if err != nil {
 				log.Println(err)
 			}

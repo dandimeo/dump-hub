@@ -1,0 +1,52 @@
+.folder {
+  text-align: left;
+  background-color: hsl(198, 0%, 0%);
+  color: white;
+}
+
+.preview-area {
+  padding: 5px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #dedede;
+  border: 0.05rem solid;
+  border-color: #acbac3;
+  color: #000;
+  border-radius: 0.15rem;
+  font-size: 0.65rem;
+  width: 100%;
+  line-height: 1.1;
+  height: 22.5em;
+}
+
+.entry {
+  text-align: left;
+  vertical-align: middle;
+}
+
+.entry:hover {
+  background-color: hsl(198, 0%, 95%);
+}
+
+.selected {
+  background-color: #dff0cf;
+}
+
+.selected:hover {
+  background-color: #dff0cf;
+}
+
+.parser-input {
+  border: none;
+  border-bottom: 2px solid hsl(198, 0%, 27%);
+  width: 3em;
+  background-color: #fafafa;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.selected-column {
+  background-color: #d7fcd5cc;
+}

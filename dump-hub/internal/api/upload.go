@@ -34,13 +34,13 @@ import (
 	"strings"
 
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/x0e1f/dump-hub/internal/elastic"
+	"github.com/x0e1f/dump-hub/internal/common"
 )
 
 /*
 upload :: Upload dump file (POST)
 */
-func upload(eClient *elastic.Client) http.HandlerFunc {
+func upload() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(1024 * 1024)
 
@@ -122,7 +122,7 @@ func upload(eClient *elastic.Client) http.HandlerFunc {
 			return
 		}
 		if !strings.Contains(mtype.String(), "text/") {
-			log.Println("(ERROR) Invalid file type!")
+			log.Printf("(ERROR) Invalid file type: %s", mtype.String())
 			http.Error(w, "Invalid file type", http.StatusBadRequest)
 			os.Remove(filePath)
 			return
@@ -167,7 +167,7 @@ finishUpload :: Perform post-upload actions
 func finishUpload(id string, fileName string) error {
 	tmpPath := filepath.Join("/tmp/", id)
 
-	fileName = encodeFilename(fileName)
+	fileName = common.EncodeFilename(fileName)
 	filePath := filepath.Join(uploadFolder, fileName)
 
 	tmpFile, err := os.Open(tmpPath)

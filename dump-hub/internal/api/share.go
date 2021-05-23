@@ -24,39 +24,16 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/hex"
-	"io"
 	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/x0e1f/dump-hub/internal/common"
 )
 
 const uploadFolder = "/opt/uploads/"
+const previewSize = 20
 const maxFileSize = 10000 * 1000000
-const chunkSize = 1000
 const pageSize = 20
-
-/*
-computeChecksum :: compute file checksum
-*/
-func computeChecksum(filePath string) (string, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return "", err
-	}
-	hash := sha256.New()
-	if _, err := io.Copy(hash, f); err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(hash.Sum(nil)), nil
-}
 
 /*
 readUploadFolder :: Return the list of files in the uploads folder
@@ -79,7 +56,7 @@ func readUploadFolder() ([]common.File, error) {
 		fileSize := file.Size() / 1000000
 
 		/* Retrieve original filename */
-		fileName, err := decodeFilename(file.Name())
+		fileName, err := common.DecodeFilename(file.Name())
 		if err != nil {
 			log.Println(err)
 			continue
@@ -93,37 +70,4 @@ func readUploadFolder() ([]common.File, error) {
 	}
 
 	return files, nil
-}
-
-/*
-encodeFilename :: Encode filename to base64
-*/
-func encodeFilename(fileName string) string {
-	/* Remove file extension */
-	fileName = strings.TrimSuffix(
-		fileName,
-		filepath.Ext(fileName),
-	)
-
-	/* Encode to base64 */
-	fileName = base64.StdEncoding.
-		EncodeToString([]byte(fileName))
-
-	return fileName
-}
-
-/*
-decodeFilename :: Decode filename from base64
-*/
-func decodeFilename(fileName string) (string, error) {
-	/* Decode from base64 */
-	data, err := base64.
-		StdEncoding.
-		DecodeString(fileName)
-	if err != nil {
-		return "", err
-	}
-	fileName = string(data)
-
-	return fileName, nil
 }

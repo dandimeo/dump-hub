@@ -33,13 +33,12 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/x0e1f/dump-hub/internal/common"
-	"github.com/x0e1f/dump-hub/internal/elastic"
 )
 
 /*
 files :: Get files in upload folder (GET)
 */
-func files(eClient *elastic.Client) http.HandlerFunc {
+func files() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var results common.FilesResult
 
@@ -66,7 +65,7 @@ func files(eClient *elastic.Client) http.HandlerFunc {
 /*
 deleteFile :: Delete file in upload folder (DELETE)
 */
-func deleteFile(eClient *elastic.Client) http.HandlerFunc {
+func deleteFile() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		id := params["id"]
@@ -81,7 +80,7 @@ func deleteFile(eClient *elastic.Client) http.HandlerFunc {
 		}
 		fileName := string(data)
 
-		fileName = encodeFilename(fileName)
+		fileName = common.EncodeFilename(fileName)
 		filePath := filepath.Join(uploadFolder, fileName)
 		err = os.Remove(filePath)
 		if err != nil {

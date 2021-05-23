@@ -33,9 +33,9 @@ type Entry struct {
 }
 
 /*
-History :: Dump Hub History document
+Status :: Dump Hub Status document
 */
-type History struct {
+type Status struct {
 	Date     string `json:"date"`
 	Filename string `json:"filename"`
 	Checksum string `json:"checksum"`
@@ -51,11 +51,11 @@ type File struct {
 }
 
 /*
-HistoryData :: Dump Hub History API Response
+StatusData :: Dump Hub Status API Response
 */
-type HistoryData struct {
-	Results []History `json:"results"`
-	Tot     int       `json:"tot"`
+type StatusData struct {
+	Results []Status `json:"results"`
+	Tot     int      `json:"tot"`
 }
 
 /*
@@ -75,9 +75,9 @@ type SearchResult struct {
 }
 
 /*
-HistoryReq :: History API request
+StatusReq :: Status API request
 */
-type HistoryReq struct {
+type StatusReq struct {
 	Page int `json:"page"`
 }
 
@@ -94,4 +94,28 @@ DeleteReq :: Delete API request
 */
 type DeleteReq struct {
 	Checksum string `json:"checksum"`
+}
+
+/*
+PreviewReq :: Preview API request
+*/
+type PreviewReq struct {
+	FileName string `json:"filename"`
+	Start    int    `json:"start"`
+}
+
+/*
+PreviewResult :: Preview API response
+*/
+type PreviewResult struct {
+	Preview []string `json:"preview"`
+}
+
+/*
+AnalyzeReq :: Analyze API request
+*/
+type AnalyzeReq struct {
+	Filename string `json:"filename"`
+	Pattern  string `json:"pattern"`
+	Columns  []int  `json:"columns"`
 }

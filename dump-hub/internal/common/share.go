@@ -1,4 +1,4 @@
-package api
+package common
 
 /*
 The MIT License (MIT)
@@ -24,56 +24,60 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import (
-	"net/http"
-
-	"github.com/gorilla/mux"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 /*
-defineRoutes :: Define API routes and handlers
+ComputeChecksum :: compute file checksum
 */
-func (engine *Engine) defineRoutes() {
-	router := mux.NewRouter().StrictSlash(true)
+func ComputeChecksum(filePath string) (string, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	hash := sha256.New()
+	if _, err := io.Copy(hash, f); err != nil {
+		return "", err
+	}
 
-	router.
-		Path(engine.baseAPI + "upload").
-		Methods(http.MethodPost).
-		HandlerFunc(upload())
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
 
-	router.
-		Path(engine.baseAPI + "analyze").
-		Methods(http.MethodPost).
-		HandlerFunc(analyze(engine.eClient))
+/*
+EncodeFilename :: Encode filename to base64
+*/
+func EncodeFilename(fileName string) string {
+	/* Remove file extension */
+	fileName = strings.TrimSuffix(
+		fileName,
+		filepath.Ext(fileName),
+	)
 
-	router.
-		Path(engine.baseAPI + "status").
-		Methods(http.MethodPost).
-		HandlerFunc(getStatus(engine.eClient))
+	/* Encode to base64 */
+	fileName = base64.StdEncoding.
+		EncodeToString([]byte(fileName))
 
-	router.
-		Path(engine.baseAPI + "search").
-		Methods(http.MethodPost).
-		HandlerFunc(search(engine.eClient))
+	return fileName
+}
 
-	router.
-		Path(engine.baseAPI + "delete").
-		Methods(http.MethodPost).
-		HandlerFunc(delete(engine.eClient))
+/*
+DecodeFilename :: Decode filename from base64
+*/
+func DecodeFilename(fileName string) (string, error) {
+	/* Decode from base64 */
+	data, err := base64.
+		StdEncoding.
+		DecodeString(fileName)
+	if err != nil {
+		return "", err
+	}
+	fileName = string(data)
 
-	router.
-		Path(engine.baseAPI + "files").
-		Methods(http.MethodGet).
-		HandlerFunc(files())
-
-	router.
-		Path(engine.baseAPI + "files/{id}").
-		Methods(http.MethodDelete).
-		HandlerFunc(deleteFile())
-
-	router.
-		Path(engine.baseAPI + "preview").
-		Methods(http.MethodPost).
-		HandlerFunc(previewFile())
-
-	engine.router = router
+	return fileName, nil
 }

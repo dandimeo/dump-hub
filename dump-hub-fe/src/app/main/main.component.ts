@@ -1,16 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { ApiService } from '../api.service';
+import { PagConfig } from '../models';
 
 interface SearchResponse {
   results?: any[];
   tot?: number;
-}
-
-interface PagConfig {
-  currentPage: number;
-  pageSize: number;
-  total: number;
 }
 
 @Component({
@@ -22,10 +17,9 @@ export class MainComponent implements OnInit {
   searchForm = new FormGroup({
     query: new FormControl(),
   });
-  searchError = false;
 
   results: any[] = [];
-  loadingResult = false;
+  loadingResult = true;
   pagConfig: PagConfig;
 
   constructor(private apiService: ApiService) {
@@ -57,8 +51,6 @@ export class MainComponent implements OnInit {
       },
       (_) => {
         this.results = [];
-        this.loadingResult = false;
-        this.searchError = true;
       }
     );
   }

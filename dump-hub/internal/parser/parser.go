@@ -25,7 +25,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/x0e1f/dump-hub/internal/common"
@@ -35,36 +34,37 @@ import (
 Parser :: Parser object
 */
 type Parser struct {
-	separator   string
-	commentChar string
-	columns     []int
+	Start     int
+	Separator string
+	Columns   []int
+	Filename  string
+	Filepath  string
+	Checksum  string
 }
 
 /*
 New :: Create new parser object
 */
-func New(pattern string, columnsRaw string) (*Parser, error) {
+func New(pattern string, columns []int, filename string, filepath string) (*Parser, error) {
 	p := &Parser{}
 
 	_, err := fmt.Sscanf(
 		pattern,
-		"{%1s}{%1s}",
-		&p.separator,
-		&p.commentChar,
+		"{%d}{%1s}",
+		&p.Start,
+		&p.Separator,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	columnsRaw = strings.Replace(columnsRaw, " ", "", -1)
-	columns := strings.Split(columnsRaw, ",")
+	p.Columns = columns
+	p.Filename = filename
+	p.Filepath = filepath
 
-	for _, column := range columns {
-		columnValue, err := strconv.Atoi(column)
-		if err != nil {
-			return nil, err
-		}
-		p.columns = append(p.columns, columnValue)
+	p.Checksum, err = common.ComputeChecksum(p.Filepath)
+	if err != nil {
+		return nil, err
 	}
 
 	return p, nil
@@ -73,7 +73,7 @@ func New(pattern string, columnsRaw string) (*Parser, error) {
 /*
 ParseEntry :: Parse dump entry from file
 */
-func (p *Parser) ParseEntry(filename string, checkSum string, entry string) *common.Entry {
+func (p *Parser) ParseEntry(entry string) *common.Entry {
 	obj := &common.Entry{}
 	data := []string{}
 
@@ -84,12 +84,9 @@ func (p *Parser) ParseEntry(filename string, checkSum string, entry string) *com
 
 	/* Remove whitespaces from line */
 	line := strings.Replace(entry, " ", "", -1)
-	if string(line[0]) == p.commentChar {
-		return nil
-	}
 
 	/* Split line with separator */
-	matches := strings.Split(entry, p.separator)
+	matches := strings.Split(line, p.Separator)
 	if len(matches) < 1 {
 		return nil
 	}
@@ -101,7 +98,7 @@ func (p *Parser) ParseEntry(filename string, checkSum string, entry string) *com
 		}
 
 		/* Add value only if index in column */
-		for _, column := range p.columns {
+		for _, column := range p.Columns {
 			if i == column {
 				data = append(data, match)
 			}
@@ -114,8 +111,8 @@ func (p *Parser) ParseEntry(filename string, checkSum string, entry string) *com
 	}
 
 	/* Set origin fields */
-	obj.Origin = filename
-	obj.OriginID = checkSum
+	obj.Origin = p.Filename
+	obj.OriginID = p.Checksum
 	obj.Data = data
 
 	return obj
