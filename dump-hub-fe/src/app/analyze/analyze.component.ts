@@ -55,10 +55,8 @@ export class AnalyzeComponent implements OnInit {
               type: 0,
             });
 
-            this.files.forEach((f, index) => {
-              if (f == this.selectFile) delete this.files[index];
-            });
-
+            this.loadingFiles = true;
+            this.getFiles();
             this.previewTableMaxCols = 0;
             this.previewTable = [];
             this.selectedFile = null;

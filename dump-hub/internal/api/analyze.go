@@ -76,7 +76,7 @@ func analyze(eClient *elastic.Client) http.HandlerFunc {
 }
 
 func analyzeFile(eClient *elastic.Client, analyzeReq common.AnalyzeReq, fileName string) {
-	filePath, err := moveFile(fileName)
+	filePath, err := moveTemp(fileName)
 	if err != nil {
 		log.Println(err)
 		return
@@ -116,9 +116,15 @@ func analyzeFile(eClient *elastic.Client, analyzeReq common.AnalyzeReq, fileName
 	processEntry(eClient, parser)
 }
 
-func moveFile(fileName string) (string, error) {
+func moveTemp(fileName string) (string, error) {
 	originPath := filepath.Join(uploadFolder, fileName)
+	hiddenPath := filepath.Join(uploadFolder, "."+fileName)
 	filePath := filepath.Join("/tmp/", fileName)
+
+	os.Rename(
+		originPath,
+		hiddenPath,
+	)
 
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -126,7 +132,7 @@ func moveFile(fileName string) (string, error) {
 	}
 	defer file.Close()
 
-	originFile, err := os.Open(originPath)
+	originFile, err := os.Open(hiddenPath)
 	if err != nil {
 		return "", err
 	}
@@ -138,7 +144,7 @@ func moveFile(fileName string) (string, error) {
 	}
 	originFile.Close()
 
-	err = os.Remove(originPath)
+	err = os.Remove(hiddenPath)
 	if err != nil {
 		return "", err
 	}
