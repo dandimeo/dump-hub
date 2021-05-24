@@ -163,7 +163,7 @@ IsAlreadyUploaded :: Check if file is already uploaded (by checksum)
 */
 func (eClient *Client) IsAlreadyUploaded(checkSum string) (bool, error) {
 	exists, err := eClient.client.Exists().
-		Index("dump-hub-history").
+		Index("dump-hub-uploads").
 		Id(checkSum).
 		Do(eClient.ctx)
 	if err != nil {
@@ -196,7 +196,7 @@ func (eClient *Client) NewStatusDocument(h *common.Status, checkSum string) erro
 }
 
 /*
-UpdateUploadStatus :: Update status field of an history element
+UpdateUploadStatus :: Update status field of upload status document
 */
 func (eClient *Client) UpdateUploadStatus(checkSum string, newStatus int) error {
 	_, err := eClient.client.Update().
@@ -229,8 +229,8 @@ func (eClient *Client) GetStatus(from int, size int) (*common.StatusData, error)
 
 	statusData := common.StatusData{}
 	for _, hit := range results.Hits.Hits {
-		history := common.Status{}
-		err := json.Unmarshal(hit.Source, &history)
+		status := common.Status{}
+		err := json.Unmarshal(hit.Source, &status)
 		if err != nil {
 			log.Println(err)
 			break
@@ -238,7 +238,7 @@ func (eClient *Client) GetStatus(from int, size int) (*common.StatusData, error)
 
 		statusData.Results = append(
 			statusData.Results,
-			history,
+			status,
 		)
 	}
 	statusData.Tot = int(results.Hits.TotalHits.Value)

@@ -47,21 +47,39 @@ func analyze(eClient *elastic.Client) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&analyzeReq)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "", http.StatusBadRequest)
+			http.Error(w, "malformed request", http.StatusBadRequest)
 			return
 		}
 
 		if len(analyzeReq.Columns) < 1 {
-			log.Println("Invalid columns value")
-			http.Error(w, "", http.StatusBadRequest)
+			http.Error(w, "invalid columns value", http.StatusBadRequest)
 			return
 		}
 
 		fileName := common.EncodeFilename(analyzeReq.Filename)
 		originPath := filepath.Join(uploadFolder, fileName)
 		if _, err := os.Stat(originPath); os.IsNotExist(err) {
-			log.Println("File does not exist")
-			http.Error(w, "", http.StatusNotFound)
+			log.Println(err)
+			http.Error(w, "file does not exist", http.StatusNotFound)
+			return
+		}
+
+		checkSum, err := common.ComputeChecksum(originPath)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "unable to compute file checksum", http.StatusInternalServerError)
+			return
+		}
+
+		alreadyUploaded, err := eClient.IsAlreadyUploaded(checkSum)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		if alreadyUploaded {
+			log.Printf("%s already uploaded!", checkSum)
+			http.Error(w, "file already uploaded", http.StatusBadRequest)
 			return
 		}
 
@@ -69,20 +87,15 @@ func analyze(eClient *elastic.Client) http.HandlerFunc {
 			eClient,
 			analyzeReq,
 			fileName,
+			checkSum,
 		)
 
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func analyzeFile(eClient *elastic.Client, analyzeReq common.AnalyzeReq, fileName string) {
+func analyzeFile(eClient *elastic.Client, analyzeReq common.AnalyzeReq, fileName string, checkSum string) {
 	filePath, err := moveTemp(fileName)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	checkSum, err := common.ComputeChecksum(filePath)
 	if err != nil {
 		log.Println(err)
 		return
@@ -121,10 +134,13 @@ func moveTemp(fileName string) (string, error) {
 	hiddenPath := filepath.Join(uploadFolder, "."+fileName)
 	filePath := filepath.Join("/tmp/", fileName)
 
-	os.Rename(
+	err := os.Rename(
 		originPath,
 		hiddenPath,
 	)
+	if err != nil {
+		return "", err
+	}
 
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -159,7 +175,6 @@ func processEntry(e *elastic.Client, parser *parser.Parser) {
 	}
 	defer file.Close()
 
-	/* Start routines */
 	var wg sync.WaitGroup
 	quitChan := make(chan struct{})
 	entryChan := make(chan *common.Entry)

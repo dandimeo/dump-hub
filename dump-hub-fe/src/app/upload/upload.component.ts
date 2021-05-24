@@ -3,6 +3,7 @@ import { ApiService } from '../api.service';
 import { FileObj, Files, SelectedFile } from '../models';
 import { HttpErrorResponse } from '@angular/common/http';
 import * as uuid from 'uuid';
+import { concat, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-upload',
@@ -35,7 +36,6 @@ export class UploadComponent implements OnInit {
   public onSelect(event: any): void {
     if (event.target.files.length > 0) {
       const files = event.target.files;
-
       for (const inFile of files) {
         const selectedFile: SelectedFile = {
           file: inFile,
@@ -46,7 +46,6 @@ export class UploadComponent implements OnInit {
           chunkSent: 0,
           progress: 0,
         };
-
         this.fileQueue.push(selectedFile);
         this.uploadQueue();
       }
@@ -68,6 +67,7 @@ export class UploadComponent implements OnInit {
     const chunks = Math.ceil(fileSize / chunkSize);
 
     let chunk = 0;
+    const requests: Observable<any>[] = [];
     while (chunk < chunks) {
       const offset = chunk * chunkSize;
       const slice = selectedFile.file.slice(offset, offset + chunkSize);
@@ -79,7 +79,10 @@ export class UploadComponent implements OnInit {
       formData.append('file_size', fileSize.toString());
       formData.append('data', slice);
 
-      const apiResponse = this.apiService.uploadChunk(formData);
+      // const apiResponse = this.apiService.uploadChunk(formData);
+      requests.push(this.apiService.uploadChunk(formData));
+
+      /*
       apiResponse.subscribe(
         (_) => {
           selectedFile.chunkSent++;
@@ -101,8 +104,30 @@ export class UploadComponent implements OnInit {
           return;
         }
       );
+      */
 
       chunk++;
     }
+
+    concat(...requests).subscribe(
+      (_) => {
+        selectedFile.chunkSent++;
+        selectedFile.progress = Math.ceil(
+          (selectedFile.chunkSent * 100) / chunks
+        );
+        if (selectedFile.chunkSent === chunks) {
+          selectedFile.complete = true;
+          this.getFiles();
+        }
+      },
+      (err: HttpErrorResponse) => {
+        selectedFile.error = 'Unknown error';
+        if (typeof err.error === 'string') {
+          selectedFile.error = err.error;
+        }
+        this.getFiles();
+        return;
+      }
+    );
   }
 }

@@ -108,17 +108,23 @@ func upload() http.HandlerFunc {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(data)
 		filePath := filepath.Join("/tmp/", id)
-		writeToFile(
+		err = writeToFile(
 			filePath,
 			offset,
 			buf.Bytes(),
 		)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
 		/* Limit File Type */
 		mtype, err := mimetype.DetectFile(filePath)
 		if err != nil {
 			log.Printf("(ERROR) %s", err)
 			http.Error(w, "Unable to detect mimetype", http.StatusInternalServerError)
+			os.Remove(filePath)
 			return
 		}
 		if !strings.Contains(mtype.String(), "text/") {
@@ -154,6 +160,10 @@ func writeToFile(filePath string, offset int, data []byte) error {
 
 	whence := io.SeekStart
 	_, err = f.Seek(int64(offset), whence)
+	if err != nil {
+		return err
+	}
+
 	f.Write(data)
 	f.Sync()
 	f.Close()

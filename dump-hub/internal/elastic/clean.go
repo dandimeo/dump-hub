@@ -29,7 +29,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"sync"
 
 	"github.com/olivere/elastic/v7"
 )
@@ -42,9 +41,8 @@ const ChunkSize = 1000
 /*
 cleanTmp :: Clean tmp folder
 */
-func cleanTmp(wg *sync.WaitGroup) {
+func cleanTmp() {
 	log.Println("Cleaning tmp folder...")
-	defer wg.Done()
 
 	dir, err := ioutil.ReadDir("/tmp")
 	if err != nil {
@@ -58,11 +56,10 @@ func cleanTmp(wg *sync.WaitGroup) {
 }
 
 /*
-cleanHistory :: Clean unprocessed files and update history status
+cleanStatus :: Clean unprocessed files and update status
 */
-func (eClient *Client) cleanHistory(wg *sync.WaitGroup) {
-	log.Println("Cleaning history of unprocessed files...")
-	defer wg.Done()
+func (eClient *Client) cleanStatus() {
+	log.Println("Cleaning status of unprocessed files...")
 
 	matchQ := elastic.NewMatchQuery(
 		"status",
@@ -73,7 +70,7 @@ func (eClient *Client) cleanHistory(wg *sync.WaitGroup) {
 		Must(matchQ)
 
 	scroll := eClient.client.Scroll().
-		Index("dump-hub-history").
+		Index("dump-hub-uploads").
 		Query(query).
 		Size(1)
 
@@ -103,7 +100,7 @@ func (eClient *Client) cleanHistory(wg *sync.WaitGroup) {
 		Must(matchQ)
 
 	scroll = eClient.client.Scroll().
-		Index("dump-hub-history").
+		Index("dump-hub-uploads").
 		Query(query).
 		Size(1)
 

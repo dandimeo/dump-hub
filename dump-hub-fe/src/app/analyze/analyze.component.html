@@ -5,34 +5,23 @@
         <div class="alert-icon-wrapper">
           <cds-icon class="alert-icon" shape="check-circle"></cds-icon>
         </div>
-        <span class="alert-text"> <b>Success</b> {{ alert.message }} </span>
+        <span class="alert-text"> <b>Success:</b> {{ alert.message }} </span>
       </div>
     </div>
-    <button
-      type="button"
-      class="close"
-      aria-label="Close"
-      (click)="removeHistory(alert)"
-    >
+    <button type="button" class="close" aria-label="Close" (click)="removeHistory(alert)">
       <clr-icon aria-hidden="true" shape="close"></clr-icon>
     </button>
   </div>
-
-  <div class="alert alert-error" role="alert" *ngIf="alert.type == -1">
+  <div class="alert alert-danger" role="alert" *ngIf="alert.type == -1">
     <div class="alert-items">
       <div class="alert-item static">
         <div class="alert-icon-wrapper">
           <cds-icon class="alert-icon" shape="exclamation-circle"></cds-icon>
         </div>
-        <span class="alert-text"> <b>Error</b> {{ alert.message }} </span>
+        <span class="alert-text"> <b>Error:</b> {{ alert.message }} </span>
       </div>
     </div>
-    <button
-      type="button"
-      class="close"
-      aria-label="Close"
-      (click)="removeHistory(alert)"
-    >
+    <button type="button" class="close" aria-label="Close" (click)="removeHistory(alert)">
       <clr-icon aria-hidden="true" shape="close"></clr-icon>
     </button>
   </div>
@@ -51,23 +40,16 @@
     <tr>
       <td class="folder" colspan="2">
         <clr-icon shape="plus-circle" size="25"></clr-icon>
-        &nbsp;<b>Analyze</b>&nbsp;<code
-          >({{ files.length }} File\s Available)</code
-        >
+        &nbsp;<b>Analyze</b>&nbsp;<code>({{ files.length }} File\s Available)</code>
       </td>
     </tr>
     <ng-container *ngIf="files.length">
       <ng-container *ngFor="let file of files">
         <tr>
-          <td
-            class="entry"
-            (click)="selectFile(file)"
-            [ngClass]="{ selected: isSelected(file) }"
-          >
+          <td class="entry" (click)="selectFile(file)" [ngClass]="{ selected: isSelected(file) }">
             <clr-icon shape="file" size="25"></clr-icon>
             &nbsp;
-            <b>{{ file.filename }}</b
-            >&nbsp;
+            <b>{{ file.filename }}</b>&nbsp;
             <b> {{ file.size }} MB</b>
           </td>
         </tr>
@@ -91,22 +73,13 @@
 <form [formGroup]="patternForm">
   <clr-icon shape="flag"></clr-icon>
   &nbsp;
-  <input
-    class="parser-input"
-    formControlName="startLine"
-    type="number"
-    min="0"
-  />
+  <input class="parser-input" formControlName="startLine" type="number" min="0" />
   &nbsp;
   <clr-icon shape="filter" solid></clr-icon>
-  &nbsp;<input
-    class="parser-input"
-    formControlName="separator"
-    maxlength="1"
-    type="text"
-  />
+  &nbsp;<input class="parser-input" formControlName="separator" maxlength="1" type="text" />
 </form>
 <br />
+
 <div class="preview-area">
   <ng-container *ngFor="let line of preview">
     {{ line }}
@@ -120,38 +93,27 @@
       <tr>
         <th *ngFor="let n of counter(previewTableMaxCols); let i = index">
           <a (click)="toggleColumn(i)">
-            <clr-icon
-              *ngIf="!isColumnSelected(i)"
-              shape="plus-circle"
-              size="20"
-            ></clr-icon>
-            <clr-icon
-              *ngIf="isColumnSelected(i)"
-              shape="minus-circle"
-              size="20"
-            ></clr-icon>
+            <clr-icon *ngIf="!isColumnSelected(i)" shape="plus-circle" size="20"></clr-icon>
+            <clr-icon *ngIf="isColumnSelected(i)" shape="minus-circle" size="20"></clr-icon>
           </a>
         </th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let row of previewTable">
-        <td
-          *ngFor="let value of row; let i = index"
-          [class.selected-column]="isColumnSelected(i)"
-        >
+        <td *ngFor="let value of row; let i = index" [class.selected-column]="isColumnSelected(i)">
           {{ value }}
         </td>
       </tr>
     </tbody>
   </table>
 </div>
+
 <div class="clr-form-control" style="float: right">
-  <button
-    class="btn btn-primary"
-    [disabled]="!this.analyzeForm.valid"
-    (click)="analyzeFile()"
-  >
+  <button *ngIf="!pendingRequest" class="btn btn-primary" [disabled]="!this.analyzeForm.valid" (click)="analyzeFile()">
     Analyze file
+  </button>
+  <button *ngIf="pendingRequest" class="btn btn-primary" disabled>
+    <clr-spinner [clrInline]="true"></clr-spinner> Analyzing...
   </button>
 </div>

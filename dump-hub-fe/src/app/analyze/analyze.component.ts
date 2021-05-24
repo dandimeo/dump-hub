@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../api.service';
@@ -12,6 +13,7 @@ export class AnalyzeComponent implements OnInit {
   files: FileObj[] = [];
   preview: string[] = [];
   previewTable: string[][] = [];
+  pendingRequest = false;
   previewTableMaxCols = 0;
   selectedFile: FileObj | null;
   loadingFiles = true;
@@ -45,16 +47,16 @@ export class AnalyzeComponent implements OnInit {
   public analyzeFile(): void {
     if (this.selectedFile) {
       if (this.selectedFile.filename) {
-        let fn = this.selectedFile.filename;
-        let pattern = this.analyzeForm.get('pattern')?.value;
-        let columns = this.analyzeForm.get('columns')?.value;
+        const fn = this.selectedFile.filename;
+        const pattern = this.analyzeForm.get('pattern')?.value;
+        const columns = this.analyzeForm.get('columns')?.value;
+        this.pendingRequest = true;
         this.apiService.analyze(fn, pattern, columns).subscribe(
           (_) => {
             this.history.push({
               message: fn + ' will be analyzed in background',
               type: 0,
             });
-
             this.loadingFiles = true;
             this.getFiles();
             this.previewTableMaxCols = 0;
@@ -63,25 +65,22 @@ export class AnalyzeComponent implements OnInit {
             this.preview = [];
             this.analyzeForm.get('pattern')?.setValue(null);
             this.analyzeForm.get('columns')?.setValue(null);
-
-            document.body.scrollTop;
+            this.pendingRequest = false;
           },
-          (_) => {
+          (error: HttpErrorResponse) => {
             this.history.push({
-              message: 'unable to analyze file: ' + fn,
+              message: 'Unable to analyze ' + fn + ': ' + error.error + '.',
               type: -1,
             });
             this.loadingFiles = true;
             this.getFiles();
-
             this.previewTableMaxCols = 0;
             this.previewTable = [];
             this.selectedFile = null;
             this.preview = [];
             this.analyzeForm.get('pattern')?.setValue(null);
             this.analyzeForm.get('columns')?.setValue(null);
-
-            document.body.scrollTop;
+            this.pendingRequest = false;
           }
         );
       }
@@ -89,14 +88,14 @@ export class AnalyzeComponent implements OnInit {
   }
 
   public selectFile(file: FileObj): void {
-    if (file != this.selectedFile) {
+    if (file !== this.selectedFile) {
       this.selectedFile = file;
       this.getPreview(file);
     }
   }
 
   public isSelected(file: FileObj): boolean {
-    if (file == this.selectedFile) {
+    if (file === this.selectedFile) {
       return true;
     }
     return false;
@@ -130,9 +129,9 @@ export class AnalyzeComponent implements OnInit {
     return new Array(i);
   }
 
-  public removeHistory(alert: Alert) {
+  public removeHistory(alert: Alert): void {
     this.history.forEach((element, index) => {
-      if (element == alert) {
+      if (element === alert) {
         delete this.history[index];
       }
     });
@@ -156,7 +155,7 @@ export class AnalyzeComponent implements OnInit {
 
   private getPreview(file: FileObj): void {
     this.preview = ['Loading preview data...'];
-    const start = parseInt(this.patternForm.get('startLine')?.value);
+    const start = parseInt(this.patternForm.get('startLine')?.value, 10);
     if (file.filename) {
       this.apiService.preview(file.filename, start).subscribe(
         (data: Preview) => {

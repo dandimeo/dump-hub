@@ -27,7 +27,6 @@ import (
 	"context"
 	"log"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/olivere/elastic/v7"
@@ -75,13 +74,8 @@ func New(ip string, port int) *Client {
 		log.Fatal(err)
 	}
 	e.waitGreen()
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	//go e.cleanHistory(&wg)
-	go cleanTmp(&wg)
-	wg.Wait()
+	e.cleanStatus()
+	cleanTmp()
 
 	return e
 }
