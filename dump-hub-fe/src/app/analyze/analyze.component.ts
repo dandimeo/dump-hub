@@ -130,11 +130,8 @@ export class AnalyzeComponent implements OnInit {
   }
 
   public removeHistory(alert: Alert): void {
-    this.history.forEach((element, index) => {
-      if (element === alert) {
-        delete this.history[index];
-      }
-    });
+    const index = this.history.indexOf(alert);
+    this.history.splice(index, 1);
   }
 
   private onStartChange(): void {
