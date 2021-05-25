@@ -29,24 +29,24 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/x0e1f/dump-hub/internal/elastic"
+	"github.com/x0e1f/dump-hub/internal/esapi"
 )
 
 /*
-Engine :: Core API Engine
+Engine - Core API Engine
 */
 type Engine struct {
 	host    string
 	port    int
 	baseAPI string
 	router  *mux.Router
-	eClient *elastic.Client
+	eClient *esapi.Client
 }
 
 /*
-New :: Create the Api Engine object
+New - Create the Dump Hub API engine.
 */
-func New(host string, port int, baseAPI string, eClient *elastic.Client) *Engine {
+func New(host string, port int, baseAPI string, eClient *esapi.Client) *Engine {
 	log.Println("Initializing engine...")
 	engine := &Engine{
 		host:    host,
@@ -60,7 +60,7 @@ func New(host string, port int, baseAPI string, eClient *elastic.Client) *Engine
 }
 
 /*
-Serve :: Serve API
+Serve - Serve API on host:port/baseAPI
 */
 func (engine *Engine) Serve() {
 	log.Printf("Serving API on %s:%d", engine.host, engine.port)

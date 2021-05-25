@@ -1,4 +1,4 @@
-package elastic
+package filesys
 
 /*
 The MIT License (MIT)
@@ -23,59 +23,13 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import (
-	"context"
-	"log"
-	"strconv"
-	"time"
-
-	"github.com/olivere/elastic/v7"
+/*
+UploadFolder - Uploads folder path
+PreviewSize - Size of file preview
+MaxFileSize - Max upload file size
+*/
+const (
+	UploadFolder = "/opt/uploads/"
+	PreviewSize  = 20
+	MaxFileSize  = 10000 * 1000000
 )
-
-/*
-Client :: Elasticsearch client object
-*/
-type Client struct {
-	client *elastic.Client
-	ctx    context.Context
-	ip     string
-	port   int
-}
-
-/*
-New :: New client for Elasticsearch API
-*/
-func New(ip string, port int) *Client {
-	e := &Client{
-		ip:   ip,
-		port: port,
-	}
-
-	conn := "http://" + e.ip + ":" + strconv.Itoa(e.port)
-	log.Println("Waiting for elasticsearch node...")
-	client, err := elastic.NewClient(elastic.SetURL(conn))
-	for err != nil {
-		client, err = elastic.NewClient(
-			elastic.SetURL(conn),
-			elastic.SetHealthcheckTimeoutStartup(30*time.Second),
-			elastic.SetSniff(false),
-		)
-	}
-	log.Println("Connected to elasticsearch!")
-	e.client = client
-	e.ctx = context.Background()
-
-	err = e.CreateIndex("dump-hub", entryMapping)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = e.CreateIndex("dump-hub-uploads", uploadMapping)
-	if err != nil {
-		log.Fatal(err)
-	}
-	e.waitGreen()
-	e.cleanStatus()
-	cleanTmp()
-
-	return e
-}

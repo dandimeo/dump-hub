@@ -30,7 +30,7 @@ import (
 )
 
 /*
-defineRoutes :: Define API routes and handlers
+defineRoutes - Define API routes and handlers
 */
 func (engine *Engine) defineRoutes() {
 	router := mux.NewRouter().StrictSlash(true)
@@ -48,7 +48,7 @@ func (engine *Engine) defineRoutes() {
 	router.
 		Path(engine.baseAPI + "status").
 		Methods(http.MethodPost).
-		HandlerFunc(getStatus(engine.eClient))
+		HandlerFunc(status(engine.eClient))
 
 	router.
 		Path(engine.baseAPI + "search").
@@ -73,7 +73,7 @@ func (engine *Engine) defineRoutes() {
 	router.
 		Path(engine.baseAPI + "preview").
 		Methods(http.MethodPost).
-		HandlerFunc(previewFile())
+		HandlerFunc(preview())
 
 	engine.router = router
 }

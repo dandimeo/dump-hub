@@ -1,4 +1,4 @@
-package elastic
+package esapi
 
 /*
 The MIT License (MIT)

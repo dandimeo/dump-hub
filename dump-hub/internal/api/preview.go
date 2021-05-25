@@ -31,12 +31,30 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/x0e1f/dump-hub/internal/common"
+	"github.com/x0e1f/dump-hub/internal/filesys"
 )
 
-func previewFile() http.HandlerFunc {
+/*
+previewReq - API Request Struct
+*/
+type previewReq struct {
+	FileName string `json:"filename"`
+	Start    int    `json:"start"`
+}
+
+/*
+previewResult - API Response Struct
+*/
+type previewResult struct {
+	Preview []string `json:"preview"`
+}
+
+/*
+preview - Preview API Handler
+*/
+func preview() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var previewReq common.PreviewReq
+		var previewReq previewReq
 
 		err := json.NewDecoder(r.Body).Decode(&previewReq)
 		if err != nil {
@@ -45,8 +63,11 @@ func previewFile() http.HandlerFunc {
 			return
 		}
 
-		fileName := common.EncodeFilename(previewReq.FileName)
-		filePath := filepath.Join(uploadFolder, fileName)
+		fileName := filesys.EncodeFilename(previewReq.FileName)
+		filePath := filepath.Join(
+			filesys.UploadFolder,
+			fileName,
+		)
 		previewData, err := readPreview(
 			filePath,
 			previewReq.Start,
@@ -57,7 +78,7 @@ func previewFile() http.HandlerFunc {
 			return
 		}
 
-		preview := common.PreviewResult{
+		preview := previewResult{
 			Preview: *previewData,
 		}
 		response, err := json.Marshal(preview)
@@ -73,6 +94,10 @@ func previewFile() http.HandlerFunc {
 	}
 }
 
+/*
+readPreview - Get preview data from a file
+(from start point to next "previewSize" lines).
+*/
 func readPreview(filePath string, start int) (*[]string, error) {
 	previewData := []string{}
 
@@ -90,7 +115,7 @@ func readPreview(filePath string, start int) (*[]string, error) {
 	currentLine := 0
 	for scanner.Scan() {
 		line := scanner.Text()
-		if currentLine >= (start + previewSize) {
+		if currentLine >= (start + filesys.PreviewSize) {
 			break
 		}
 

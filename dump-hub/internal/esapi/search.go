@@ -1,4 +1,4 @@
-package api
+package esapi
 
 /*
 The MIT License (MIT)
@@ -26,59 +26,62 @@ OTHER DEALINGS IN THE SOFTWARE.
 import (
 	"encoding/json"
 	"log"
-	"net/http"
 
-	"github.com/x0e1f/dump-hub/internal/esapi"
+	"github.com/olivere/elastic/v7"
+	"github.com/x0e1f/dump-hub/internal/common"
 )
 
 /*
-searchReq - API Request Struct
+Search - Search entries on dump-hub index (Paginated)
 */
-type searchReq struct {
-	Query string `json:"query"`
-	Page  int    `json:"page"`
-}
+func (eClient *Client) Search(queryString string, from int, size int) (*common.SearchResult, error) {
+	var results *elastic.SearchResult
+	var err error
 
-/*
-search - Search API Handler
-*/
-func search(eClient *esapi.Client) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var searchReq searchReq
-
-		err := json.NewDecoder(r.Body).Decode(&searchReq)
+	if len(queryString) < 1 || queryString == "*" {
+		query := elastic.NewMatchAllQuery()
+		results, err = eClient.client.Search().
+			Index("dump-hub").
+			Query(query).
+			From(from).
+			Size(size).
+			Do(eClient.ctx)
 		if err != nil {
-			log.Println(err)
-			http.Error(w, "", http.StatusBadRequest)
-			return
+			return nil, err
 		}
-
-		query := "*"
-		if len(searchReq.Query) > 0 {
-			query = searchReq.Query
-		}
-
-		from := pageSize * (searchReq.Page - 1)
-		results, err := eClient.Search(
-			string(query),
-			from,
-			pageSize,
-		)
+	} else {
+		query := elastic.
+			NewMultiMatchQuery(
+				queryString,
+				"_all",
+			).
+			Type("match_phrase")
+		results, err = eClient.client.Search().
+			Index("dump-hub").
+			Query(query).
+			From(from).
+			Size(size).
+			Do(eClient.ctx)
 		if err != nil {
-			http.Error(w, "", http.StatusInternalServerError)
-			log.Println(err)
-			return
+			return nil, err
 		}
-
-		response, err := json.Marshal(results)
-		if err != nil {
-			http.Error(w, "", http.StatusInternalServerError)
-			log.Println(err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(response)
 	}
+
+	searchResult := common.SearchResult{}
+	for _, hit := range results.Hits.Hits {
+		entry := common.Entry{}
+		err := json.Unmarshal(hit.Source, &entry)
+		if err != nil {
+			log.Println(err)
+			break
+		}
+
+		searchResult.Results = append(
+			searchResult.Results,
+			entry,
+		)
+	}
+	searchResult.Tot = int(results.Hits.TotalHits.Value)
+
+	return &searchResult, nil
 }

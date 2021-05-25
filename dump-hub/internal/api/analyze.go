@@ -24,25 +24,34 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import (
-	"bufio"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
-	"sync"
 	"time"
 
 	"github.com/x0e1f/dump-hub/internal/common"
-	"github.com/x0e1f/dump-hub/internal/elastic"
+	"github.com/x0e1f/dump-hub/internal/esapi"
+	"github.com/x0e1f/dump-hub/internal/filesys"
 	"github.com/x0e1f/dump-hub/internal/parser"
 )
 
-func analyze(eClient *elastic.Client) http.HandlerFunc {
+/*
+analyzeRequest - API Request Struct
+*/
+type analyzeRequest struct {
+	Filename string `json:"filename"`
+	Pattern  string `json:"pattern"`
+	Columns  []int  `json:"columns"`
+}
+
+/*
+analyze - Analyze API Handler
+*/
+func analyze(eClient *esapi.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var analyzeReq common.AnalyzeReq
+		var analyzeReq analyzeRequest
 
 		err := json.NewDecoder(r.Body).Decode(&analyzeReq)
 		if err != nil {
@@ -56,15 +65,15 @@ func analyze(eClient *elastic.Client) http.HandlerFunc {
 			return
 		}
 
-		fileName := common.EncodeFilename(analyzeReq.Filename)
-		originPath := filepath.Join(uploadFolder, fileName)
+		fileName := filesys.EncodeFilename(analyzeReq.Filename)
+		originPath := filepath.Join(filesys.UploadFolder, fileName)
 		if _, err := os.Stat(originPath); os.IsNotExist(err) {
 			log.Println(err)
 			http.Error(w, "file does not exist", http.StatusNotFound)
 			return
 		}
 
-		checkSum, err := common.ComputeChecksum(originPath)
+		checkSum, err := filesys.ComputeChecksum(originPath)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "unable to compute file checksum", http.StatusInternalServerError)
@@ -94,31 +103,31 @@ func analyze(eClient *elastic.Client) http.HandlerFunc {
 	}
 }
 
-func analyzeFile(eClient *elastic.Client, analyzeReq common.AnalyzeReq, fileName string, checkSum string) {
-	filePath, err := moveTemp(fileName)
+func analyzeFile(eClient *esapi.Client, req analyzeRequest, fn string, cs string) {
+	filePath, err := filesys.MoveTemp(fn)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	originalFilename, _ := common.DecodeFilename(fileName)
+	originalFilename, _ := filesys.DecodeFilename(fn)
 	date := time.Now().Format("2006-01-02 15:04:05")
 	status := common.Status{
 		Date:     date,
 		Filename: originalFilename,
-		Checksum: checkSum,
+		Checksum: cs,
 		Status:   0,
 	}
-	err = eClient.NewStatusDocument(&status, checkSum)
+	err = eClient.NewStatusDocument(&status, fn)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	parser, err := parser.New(
-		analyzeReq.Pattern,
-		analyzeReq.Columns,
-		analyzeReq.Filename,
+		req.Pattern,
+		req.Columns,
+		req.Filename,
 		filePath,
 	)
 	if err != nil {
@@ -126,129 +135,5 @@ func analyzeFile(eClient *elastic.Client, analyzeReq common.AnalyzeReq, fileName
 		return
 	}
 
-	processEntry(eClient, parser)
-}
-
-func moveTemp(fileName string) (string, error) {
-	originPath := filepath.Join(uploadFolder, fileName)
-	hiddenPath := filepath.Join(uploadFolder, "."+fileName)
-	filePath := filepath.Join("/tmp/", fileName)
-
-	err := os.Rename(
-		originPath,
-		hiddenPath,
-	)
-	if err != nil {
-		return "", err
-	}
-
-	file, err := os.Create(filePath)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	originFile, err := os.Open(hiddenPath)
-	if err != nil {
-		return "", err
-	}
-	defer originFile.Close()
-
-	_, err = io.Copy(file, originFile)
-	if err != nil {
-		return "", err
-	}
-	originFile.Close()
-
-	err = os.Remove(hiddenPath)
-	if err != nil {
-		return "", err
-	}
-
-	return filePath, nil
-}
-
-func processEntry(e *elastic.Client, parser *parser.Parser) {
-	file, err := os.Open(parser.Filepath)
-	if err != nil {
-		log.Println(err)
-	}
-	defer file.Close()
-
-	var wg sync.WaitGroup
-	quitChan := make(chan struct{})
-	entryChan := make(chan *common.Entry)
-	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
-		go uploader(i, &wg, e, quitChan, entryChan)
-	}
-
-	currentLine := 0
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		if currentLine < parser.Start {
-			continue
-		}
-
-		entry := parser.ParseEntry(scanner.Text())
-		if entry == nil {
-			continue
-		}
-		entryChan <- entry
-
-		currentLine++
-	}
-
-	close(quitChan)
-	close(entryChan)
-
-	wg.Wait()
-
-	/* Refresh elastic index */
-	e.Refresh()
-
-	/* Update status (Complete)*/
-	e.UpdateUploadStatus(
-		parser.Checksum,
-		1,
-	)
-}
-
-/*
-uploader :: Upload entries to elastic
-*/
-func uploader(id int, wg *sync.WaitGroup, e *elastic.Client, quitChan <-chan struct{}, entryChan <-chan *common.Entry) {
-	wg.Add(1)
-	run := true
-	chunk := []*common.Entry{}
-
-	for run {
-		/* Chunk size reached */
-		if len(chunk) >= elastic.ChunkSize {
-			err := e.BulkInsert(chunk)
-			if err != nil {
-				log.Println(err)
-			}
-			chunk = []*common.Entry{}
-		}
-
-		select {
-		case <-quitChan:
-			run = false
-		case entry := <-entryChan:
-			if entry == nil {
-				continue
-			}
-			chunk = append(chunk, entry)
-		}
-	}
-
-	/* If there is still data, upload chunk */
-	if len(chunk) > 0 {
-		err := e.BulkInsert(chunk)
-		if err != nil {
-			log.Println(err)
-		}
-	}
-
-	wg.Done()
+	eClient.IndexFile(parser)
 }

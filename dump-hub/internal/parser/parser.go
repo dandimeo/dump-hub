@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/x0e1f/dump-hub/internal/common"
+	"github.com/x0e1f/dump-hub/internal/filesys"
 )
 
 /*
@@ -62,7 +63,7 @@ func New(pattern string, columns []int, filename string, filepath string) (*Pars
 	p.Filename = filename
 	p.Filepath = filepath
 
-	p.Checksum, err = common.ComputeChecksum(p.Filepath)
+	p.Checksum, err = filesys.ComputeChecksum(p.Filepath)
 	if err != nil {
 		return nil, err
 	}

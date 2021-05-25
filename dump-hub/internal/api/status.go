@@ -28,16 +28,22 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/x0e1f/dump-hub/internal/common"
-	"github.com/x0e1f/dump-hub/internal/elastic"
+	"github.com/x0e1f/dump-hub/internal/esapi"
 )
 
 /*
-getStatus :: Get Upload Status
+statusReq - API Request Struct
 */
-func getStatus(eClient *elastic.Client) http.HandlerFunc {
+type statusReq struct {
+	Page int `json:"page"`
+}
+
+/*
+status - Status API Handler
+*/
+func status(eClient *esapi.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var statusReq common.StatusReq
+		var statusReq statusReq
 
 		err := json.NewDecoder(r.Body).Decode(&statusReq)
 		if err != nil {

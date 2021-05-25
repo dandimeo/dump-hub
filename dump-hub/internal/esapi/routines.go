@@ -1,4 +1,4 @@
-package api
+package esapi
 
 /*
 The MIT License (MIT)
@@ -23,6 +23,44 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-const (
-	pageSize = 20
+import (
+	"log"
+	"sync"
+
+	"github.com/x0e1f/dump-hub/internal/common"
 )
+
+func indexRoutine(id int, wg *sync.WaitGroup, e *Client, quitChan <-chan struct{}, entryChan <-chan *common.Entry) {
+	wg.Add(1)
+	run := true
+	chunk := []*common.Entry{}
+
+	for run {
+		if len(chunk) >= ChunkSize {
+			err := e.BulkInsert(chunk)
+			if err != nil {
+				log.Println(err)
+			}
+			chunk = []*common.Entry{}
+		}
+
+		select {
+		case <-quitChan:
+			run = false
+		case entry := <-entryChan:
+			if entry == nil {
+				continue
+			}
+			chunk = append(chunk, entry)
+		}
+	}
+
+	if len(chunk) > 0 {
+		err := e.BulkInsert(chunk)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	wg.Done()
+}

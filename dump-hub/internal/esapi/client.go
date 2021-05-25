@@ -1,4 +1,4 @@
-package api
+package esapi
 
 /*
 The MIT License (MIT)
@@ -24,61 +24,66 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import (
-	"encoding/json"
+	"context"
 	"log"
-	"net/http"
+	"strconv"
+	"time"
 
-	"github.com/x0e1f/dump-hub/internal/esapi"
+	"github.com/olivere/elastic/v7"
 )
 
 /*
-searchReq - API Request Struct
+ChunkSize - BulkAPI chunk size
 */
-type searchReq struct {
-	Query string `json:"query"`
-	Page  int    `json:"page"`
+const ChunkSize = 1000
+
+/*
+Client - Elasticsearch client object
+*/
+type Client struct {
+	client *elastic.Client
+	ctx    context.Context
+	bulkw  *BulkWorker
+	ip     string
+	port   int
 }
 
 /*
-search - Search API Handler
+NewClient - Create Elasticsearch client
 */
-func search(eClient *esapi.Client) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var searchReq searchReq
-
-		err := json.NewDecoder(r.Body).Decode(&searchReq)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, "", http.StatusBadRequest)
-			return
-		}
-
-		query := "*"
-		if len(searchReq.Query) > 0 {
-			query = searchReq.Query
-		}
-
-		from := pageSize * (searchReq.Page - 1)
-		results, err := eClient.Search(
-			string(query),
-			from,
-			pageSize,
-		)
-		if err != nil {
-			http.Error(w, "", http.StatusInternalServerError)
-			log.Println(err)
-			return
-		}
-
-		response, err := json.Marshal(results)
-		if err != nil {
-			http.Error(w, "", http.StatusInternalServerError)
-			log.Println(err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(response)
+func NewClient(ip string, port int) *Client {
+	e := &Client{
+		ip:   ip,
+		port: port,
 	}
+
+	conn := "http://" + e.ip + ":" + strconv.Itoa(e.port)
+	log.Println("Waiting for elasticsearch node...")
+	client, err := elastic.NewClient(elastic.SetURL(conn))
+	for err != nil {
+		client, err = elastic.NewClient(
+			elastic.SetURL(conn),
+			elastic.SetHealthcheckTimeoutStartup(30*time.Second),
+			elastic.SetSniff(false),
+		)
+	}
+	log.Println("Connected to elasticsearch!")
+	e.client = client
+	e.ctx = context.Background()
+	e.bulkw = newBulkWorker(100)
+
+	err = e.CreateIndex("dump-hub", entryMapping)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = e.CreateIndex("dump-hub-status", statusMapping)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	e.waitGreen()
+	e.cleanStatus()
+	cleanTmp()
+
+	return e
 }

@@ -33,17 +33,26 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/x0e1f/dump-hub/internal/common"
+	"github.com/x0e1f/dump-hub/internal/filesys"
 )
 
 /*
-files :: Get files in upload folder (GET)
+fileResponse - API Response Struct
+*/
+type fileResponse struct {
+	Dir   string        `json:"dir"`
+	Files []common.File `json:"files"`
+}
+
+/*
+files - Files API Handler
 */
 func files() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var results common.FilesResult
+		var results fileResponse
 
-		results.Dir = uploadFolder
-		files, err := readUploadFolder()
+		results.Dir = filesys.UploadFolder
+		files, err := filesys.ReadUploadFolder()
 		if err != nil {
 			log.Println(err)
 		}
@@ -63,7 +72,7 @@ func files() http.HandlerFunc {
 }
 
 /*
-deleteFile :: Delete file in upload folder (DELETE)
+deleteFile - DELETE File API Handler
 */
 func deleteFile() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -80,8 +89,8 @@ func deleteFile() http.HandlerFunc {
 		}
 		fileName := string(data)
 
-		fileName = common.EncodeFilename(fileName)
-		filePath := filepath.Join(uploadFolder, fileName)
+		fileName = filesys.EncodeFilename(fileName)
+		filePath := filepath.Join(filesys.UploadFolder, fileName)
 		err = os.Remove(filePath)
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)

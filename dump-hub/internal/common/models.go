@@ -24,7 +24,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 /*
-Entry :: Entry document
+Entry - Elasticsearch Entry Document
 */
 type Entry struct {
 	Origin   string   `json:"origin"`
@@ -33,7 +33,7 @@ type Entry struct {
 }
 
 /*
-Status :: Dump Hub Status document
+Status - Elasticsearch Status Document
 */
 type Status struct {
 	Date     string `json:"date"`
@@ -43,7 +43,7 @@ type Status struct {
 }
 
 /*
-File :: File in uploads folder
+File - Uploaded File Struct
 */
 type File struct {
 	FileName string `json:"filename"`
@@ -51,71 +51,17 @@ type File struct {
 }
 
 /*
-StatusData :: Dump Hub Status API Response
+StatusResult - Elasticsearch Status Response
 */
-type StatusData struct {
+type StatusResult struct {
 	Results []Status `json:"results"`
 	Tot     int      `json:"tot"`
 }
 
 /*
-SearchReq :: Search API request
-*/
-type SearchReq struct {
-	Query string `json:"query"`
-	Page  int    `json:"page"`
-}
-
-/*
-SearchResult :: Search API response
+SearchResult - Elasticsearch Search Response
 */
 type SearchResult struct {
 	Results []Entry `json:"results"`
 	Tot     int     `json:"tot"`
-}
-
-/*
-StatusReq :: Status API request
-*/
-type StatusReq struct {
-	Page int `json:"page"`
-}
-
-/*
-FilesResult :: Files API response
-*/
-type FilesResult struct {
-	Dir   string `json:"dir"`
-	Files []File `json:"files"`
-}
-
-/*
-DeleteReq :: Delete API request
-*/
-type DeleteReq struct {
-	Checksum string `json:"checksum"`
-}
-
-/*
-PreviewReq :: Preview API request
-*/
-type PreviewReq struct {
-	FileName string `json:"filename"`
-	Start    int    `json:"start"`
-}
-
-/*
-PreviewResult :: Preview API response
-*/
-type PreviewResult struct {
-	Preview []string `json:"preview"`
-}
-
-/*
-AnalyzeReq :: Analyze API request
-*/
-type AnalyzeReq struct {
-	Filename string `json:"filename"`
-	Pattern  string `json:"pattern"`
-	Columns  []int  `json:"columns"`
 }

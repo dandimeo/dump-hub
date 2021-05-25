@@ -28,13 +28,13 @@ import (
 
 	"github.com/x0e1f/dump-hub/internal/api"
 	"github.com/x0e1f/dump-hub/internal/common"
-	"github.com/x0e1f/dump-hub/internal/elastic"
+	"github.com/x0e1f/dump-hub/internal/esapi"
 )
 
 func main() {
 	fmt.Println(common.Banner)
 
-	eClient := elastic.New(
+	eClient := esapi.NewClient(
 		common.EHost,
 		common.EPort,
 	)

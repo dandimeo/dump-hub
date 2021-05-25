@@ -1,4 +1,4 @@
-package api
+package esapi
 
 /*
 The MIT License (MIT)
@@ -23,6 +23,32 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-const (
-	pageSize = 20
+import (
+	"github.com/olivere/elastic/v7"
+
+	"github.com/x0e1f/dump-hub/internal/common"
 )
+
+/*
+BulkInsert - Index entries with BulkAPI
+*/
+func (eClient *Client) BulkInsert(e []*common.Entry) error {
+	bulkRequest := eClient.client.Bulk()
+
+	for _, entry := range e {
+		req := elastic.NewBulkIndexRequest().
+			OpType("index").
+			Index("dump-hub").
+			Doc(entry)
+
+		bulkRequest = bulkRequest.Add(req)
+	}
+
+	_, err := bulkRequest.
+		Do(eClient.ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

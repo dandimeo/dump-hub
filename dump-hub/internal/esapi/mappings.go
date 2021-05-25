@@ -1,4 +1,4 @@
-package elastic
+package esapi
 
 const entryMapping = `
 {
@@ -28,7 +28,7 @@ const entryMapping = `
 }
 `
 
-const uploadMapping = `
+const statusMapping = `
 {
   "settings": {
     "number_of_shards": 1,

@@ -1,4 +1,4 @@
-package api
+package common
 
 /*
 The MIT License (MIT)
@@ -23,6 +23,47 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
+// Banner - Dump Hub Cool Banner
+const Banner = `                          
+   _                   _       _   
+ _| |_ _ _____ ___ ___| |_ _ _| |_ 
+| . | | |     | . |___|   | | | . |
+|___|___|_|_|_|  _|   |_|_|___|___|
+              |_|       
+			             
+`
+
+/*
+Host - API Host
+Port - API Port
+BaseAPI - API root folder
+*/
 const (
-	pageSize = 20
+	Host    = "0.0.0.0"
+	Port    = 8080
+	BaseAPI = "/api/"
+)
+
+/*
+EHost - Elasticsearch IP
+EPort - Elasticsearch port
+*/
+const (
+	EHost = "elasticsearch"
+	EPort = 9200
+)
+
+/*
+Error - Error while indexing file
+Enqueued - File waiting to be indexed
+Processing - File indexing in progress
+Complete - File indexing complete
+Deleting - Deleting entries
+*/
+const (
+	Error      = -1
+	Enqueued   = 0
+	Processing = 1
+	Complete   = 2
+	Deleting   = 3
 )

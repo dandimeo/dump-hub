@@ -1,4 +1,4 @@
-package common
+package filesys
 
 /*
 The MIT License (MIT)
@@ -28,13 +28,17 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/x0e1f/dump-hub/internal/common"
 )
 
 /*
-ComputeChecksum :: compute file checksum
+ComputeChecksum - Compute file checksum
 */
 func ComputeChecksum(filePath string) (string, error) {
 	f, err := os.Open(filePath)
@@ -50,10 +54,9 @@ func ComputeChecksum(filePath string) (string, error) {
 }
 
 /*
-EncodeFilename :: Encode filename to base64
+EncodeFilename - Encode filename to base64
 */
 func EncodeFilename(fileName string) string {
-	/* Remove file extension */
 	fileName = strings.TrimSuffix(
 		fileName,
 		filepath.Ext(fileName),
@@ -67,10 +70,9 @@ func EncodeFilename(fileName string) string {
 }
 
 /*
-DecodeFilename :: Decode filename from base64
+DecodeFilename - Decode filename from base64
 */
 func DecodeFilename(fileName string) (string, error) {
-	/* Decode from base64 */
 	data, err := base64.
 		StdEncoding.
 		DecodeString(fileName)
@@ -80,4 +82,80 @@ func DecodeFilename(fileName string) (string, error) {
 	fileName = string(data)
 
 	return fileName, nil
+}
+
+/*
+MoveTemp - Move uploaded file to tmp folder before
+analyze
+*/
+func MoveTemp(fileName string) (string, error) {
+	originPath := filepath.Join(UploadFolder, fileName)
+	hiddenPath := filepath.Join(UploadFolder, "."+fileName)
+	filePath := filepath.Join("/tmp/", fileName)
+
+	err := os.Rename(
+		originPath,
+		hiddenPath,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	file, err := os.Create(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	originFile, err := os.Open(hiddenPath)
+	if err != nil {
+		return "", err
+	}
+	defer originFile.Close()
+
+	_, err = io.Copy(file, originFile)
+	if err != nil {
+		return "", err
+	}
+	originFile.Close()
+
+	err = os.Remove(hiddenPath)
+	if err != nil {
+		return "", err
+	}
+
+	return filePath, nil
+}
+
+/*
+ReadUploadFolder - Returns the content of "uploads" folder
+*/
+func ReadUploadFolder() ([]common.File, error) {
+	var files = []common.File{}
+
+	fileInfo, err := ioutil.ReadDir(UploadFolder)
+	if err != nil {
+		return files, err
+	}
+
+	for _, file := range fileInfo {
+		if file.Name()[0] == '.' {
+			continue
+		}
+
+		fileSize := file.Size() / 1000000
+		fileName, err := DecodeFilename(file.Name())
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		uFile := common.File{
+			FileName: fileName,
+			Size:     fileSize,
+		}
+		files = append(files, uFile)
+	}
+
+	return files, nil
 }

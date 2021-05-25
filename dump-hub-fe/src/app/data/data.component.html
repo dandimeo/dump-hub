@@ -45,13 +45,16 @@
           </td>
           <td>
             <ng-container *ngIf="upload.status == 0">
+              <cds-icon shape="info-circle" size="20"></cds-icon>&nbsp;Enqueued
+            </ng-container>
+            <ng-container *ngIf="upload.status == 1">
               <clr-spinner [clrSmall]="true"></clr-spinner
               >&nbsp;&nbsp;Processing...
             </ng-container>
-            <ng-container *ngIf="upload.status == 1">
+            <ng-container *ngIf="upload.status == 2">
               <cds-icon shape="check-circle" size="20"></cds-icon>&nbsp;Complete
             </ng-container>
-            <ng-container *ngIf="upload.status == 2">
+            <ng-container *ngIf="upload.status == 3">
               <clr-spinner [clrSmall]="true"></clr-spinner>&nbsp;&nbsp;Deleting
               Items...
             </ng-container>

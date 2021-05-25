@@ -28,16 +28,22 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/x0e1f/dump-hub/internal/common"
-	"github.com/x0e1f/dump-hub/internal/elastic"
+	"github.com/x0e1f/dump-hub/internal/esapi"
 )
 
 /*
-delete :: Delete entry from elasticsearch
+deleteRequest - API Request Struct
 */
-func delete(eClient *elastic.Client) http.HandlerFunc {
+type deleteRequest struct {
+	Checksum string `json:"checksum"`
+}
+
+/*
+delete - Delete API Handler
+*/
+func delete(eClient *esapi.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var deleteReq common.DeleteReq
+		var deleteReq deleteRequest
 
 		err := json.NewDecoder(r.Body).Decode(&deleteReq)
 		if err != nil {

@@ -1,4 +1,4 @@
-package api
+package esapi
 
 /*
 The MIT License (MIT)
@@ -23,6 +23,40 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-const (
-	pageSize = 20
-)
+import "log"
+
+/*
+CreateIndex - Create elasticsearch index if not exists
+*/
+func (eClient *Client) CreateIndex(index string, mapping string) error {
+	exists, err := eClient.client.IndexExists(index).Do(eClient.ctx)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		_, err := eClient.client.
+			CreateIndex(index).
+			Body(mapping).
+			Do(eClient.ctx)
+		if err != nil {
+			return err
+		}
+		log.Printf("Created elasticsearch index: %s", index)
+	}
+
+	return nil
+}
+
+/*
+Refresh - Refresh dump-hub index
+*/
+func (eClient *Client) Refresh() error {
+	_, err := eClient.client.Refresh().
+		Index("dump-hub").
+		Do(eClient.ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}

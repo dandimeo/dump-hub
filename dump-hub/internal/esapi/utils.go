@@ -1,4 +1,4 @@
-package common
+package esapi
 
 /*
 The MIT License (MIT)
@@ -23,27 +23,17 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-// Host :: API Host
-const Host = "0.0.0.0"
+/*
+IsAlreadyUploaded :: Check if file is already uploaded (by checksum)
+*/
+func (eClient *Client) IsAlreadyUploaded(checkSum string) (bool, error) {
+	exists, err := eClient.client.Exists().
+		Index("dump-hub-status").
+		Id(checkSum).
+		Do(eClient.ctx)
+	if err != nil {
+		return false, err
+	}
 
-// Port :: API Port
-const Port = 8080
-
-// BaseAPI :: API root folder
-const BaseAPI = "/api/"
-
-// EHost :: Elasticsearch IP
-const EHost = "elasticsearch"
-
-// EPort :: Elasticsearch port
-const EPort = 9200
-
-// Banner :: Dump Hub Cool Banner
-const Banner = `                          
-   _                   _       _   
- _| |_ _ _____ ___ ___| |_ _ _| |_ 
-| . | | |     | . |___|   | | | . |
-|___|___|_|_|_|  _|   |_|_|___|___|
-              |_|       
-			             
-`
+	return exists, nil
+}

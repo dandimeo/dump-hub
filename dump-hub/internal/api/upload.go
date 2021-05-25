@@ -34,11 +34,11 @@ import (
 	"strings"
 
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/x0e1f/dump-hub/internal/common"
+	"github.com/x0e1f/dump-hub/internal/filesys"
 )
 
 /*
-upload :: Upload dump file (POST)
+upload - Upload API Handler
 */
 func upload() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +89,7 @@ func upload() http.HandlerFunc {
 		}
 
 		/* Limit File Size */
-		if fileSize > maxFileSize {
+		if fileSize > filesys.MaxFileSize {
 			log.Println("(ERROR) MAX_FILE_SIZE reached")
 			http.Error(w, "", http.StatusBadRequest)
 			return
@@ -150,7 +150,7 @@ func upload() http.HandlerFunc {
 }
 
 /*
-writeToFile :: Write bytes to file (with offset)
+writeToFile - Write bytes to file (with offset)
 */
 func writeToFile(filePath string, offset int, data []byte) error {
 	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, os.ModeAppend)
@@ -172,13 +172,13 @@ func writeToFile(filePath string, offset int, data []byte) error {
 }
 
 /*
-finishUpload :: Perform post-upload actions
+finishUpload - Perform post-upload actions
 */
 func finishUpload(id string, fileName string) error {
 	tmpPath := filepath.Join("/tmp/", id)
 
-	fileName = common.EncodeFilename(fileName)
-	filePath := filepath.Join(uploadFolder, fileName)
+	fileName = filesys.EncodeFilename(fileName)
+	filePath := filepath.Join(filesys.UploadFolder, fileName)
 
 	tmpFile, err := os.Open(tmpPath)
 	if err != nil {
