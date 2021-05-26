@@ -33,11 +33,6 @@ import (
 )
 
 /*
-ChunkSize - BulkAPI chunk size
-*/
-const ChunkSize = 1000
-
-/*
 Client - Elasticsearch client object
 */
 type Client struct {
@@ -70,7 +65,7 @@ func NewClient(ip string, port int) *Client {
 	log.Println("Connected to elasticsearch!")
 	e.client = client
 	e.ctx = context.Background()
-	e.bulkw = newBulkWorker(100)
+	e.bulkw = e.newWorker(100)
 
 	err = e.CreateIndex("dump-hub", entryMapping)
 	if err != nil {

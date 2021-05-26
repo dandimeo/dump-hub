@@ -1,7 +1,6 @@
 <clr-modal [(clrModalOpen)]="deleteModal">
   <h3 class="modal-title">
-    <cds-icon shape="exclamation-triangle" size="30" solid></cds-icon
-    >&nbsp;Delete items
+    <cds-icon shape="exclamation-triangle" size="30" solid></cds-icon>&nbsp;Delete items
   </h3>
   <div class="modal-body">
     <p>
@@ -45,29 +44,24 @@
           </td>
           <td>
             <ng-container *ngIf="upload.status == 0">
-              <cds-icon shape="info-circle" size="20"></cds-icon>&nbsp;Enqueued
+              <clr-spinner [clrSmall]="true"></clr-spinner>
             </ng-container>
             <ng-container *ngIf="upload.status == 1">
-              <clr-spinner [clrSmall]="true"></clr-spinner
-              >&nbsp;&nbsp;Processing...
-            </ng-container>
-            <ng-container *ngIf="upload.status == 2">
-              <cds-icon shape="check-circle" size="20"></cds-icon>&nbsp;Complete
-            </ng-container>
-            <ng-container *ngIf="upload.status == 3">
-              <clr-spinner [clrSmall]="true"></clr-spinner>&nbsp;&nbsp;Deleting
+              <clr-spinner [clrSmall]="true"></clr-spinner>
               Items...
             </ng-container>
-            <ng-container *ngIf="upload.status == -1">
-              <cds-icon shape="exclamation-circle" size="20"></cds-icon
-              >&nbsp;Processing Error
+            <ng-container *ngIf="upload.status == 2">
+              <clr-icon shape="bundle" size="20"></clr-icon>
+            </ng-container>
+            <ng-container *ngIf="upload.status == 3">
+              <cds-icon shape="exclamation-circle" size="20"></cds-icon>
+            </ng-container>
+            <ng-container *ngIf="upload.status == 4">
+              <cds-icon shape="check-circle" size="20"></cds-icon>
             </ng-container>
           </td>
           <td style="text-align: right; padding-top: 1.2em">
-            <a
-              [class.disabled]="upload.status == 0 || upload.status == 2"
-              (click)="onDeleteRequest(upload)"
-            >
+            <a [class.disabled]="upload.status != 4 && upload.status != 3" (click)="onDeleteRequest(upload)">
               <clr-icon shape="trash" size="20"></clr-icon>
             </a>
           </td>
@@ -88,21 +82,13 @@
   </tbody>
 </table>
 <div class="pagination-container" *ngIf="uploads.length">
-  <a
-    class="page-control"
-    (click)="pageChange(pagConfig.currentPage - 1)"
-    [class.disabled]="pagConfig.currentPage == 1"
-  >
+  <a class="page-control" (click)="pageChange(pagConfig.currentPage - 1)" [class.disabled]="pagConfig.currentPage == 1">
     &lt;&lt; Previous
   </a>
   <b class="page-current">{{ pagConfig.currentPage }}</b>
-  <a
-    class="page-control"
-    (click)="pageChange(pagConfig.currentPage + 1)"
-    [class.disabled]="
+  <a class="page-control" (click)="pageChange(pagConfig.currentPage + 1)" [class.disabled]="
       !(pagConfig.total >= pagConfig.pageSize * pagConfig.currentPage)
-    "
-  >
+    ">
     Next &gt;&gt;
   </a>
 </div>

@@ -36,9 +36,11 @@ GetStatus - Get status documents
 */
 func (eClient *Client) GetStatus(from int, size int) (*common.StatusResult, error) {
 	query := elastic.NewMatchAllQuery()
+	sortQ := elastic.NewFieldSort("status")
 
 	results, err := eClient.client.Search().
 		Index("dump-hub-status").
+		SortBy(sortQ).
 		Query(query).
 		From(from).
 		Size(size).
@@ -96,6 +98,7 @@ func (eClient *Client) UpdateUploadStatus(checkSum string, newStatus int) error 
 		Index("dump-hub-status").
 		Id(checkSum).
 		Doc(map[string]interface{}{"status": newStatus}).
+		Refresh("true").
 		Do(eClient.ctx)
 	if err != nil {
 		return err

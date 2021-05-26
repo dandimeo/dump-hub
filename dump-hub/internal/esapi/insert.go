@@ -24,10 +24,88 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import (
+	"bufio"
+	"log"
+	"os"
+
 	"github.com/olivere/elastic/v7"
 
 	"github.com/x0e1f/dump-hub/internal/common"
+	"github.com/x0e1f/dump-hub/internal/parser"
 )
+
+/*
+IndexFile - Process file for indexing
+*/
+func (eClient *Client) IndexFile(parser *parser.Parser) {
+	for {
+		if !eClient.isBusy() {
+			break
+		}
+	}
+	eClient.setBusy(true)
+
+	log.Printf("Processing %s...", parser.Checksum)
+	eClient.UpdateUploadStatus(
+		parser.Checksum,
+		common.Processing,
+	)
+
+	file, err := os.Open(parser.Filepath)
+	if err != nil {
+		log.Println(err)
+	}
+	defer file.Close()
+
+	entries := []*common.Entry{}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		if len(entries) >= eClient.bulkw.cSize {
+			err := eClient.BulkInsert(entries)
+			if err != nil {
+				eClient.UpdateUploadStatus(
+					parser.Checksum,
+					common.Error,
+				)
+				log.Println(err)
+				return
+			}
+			entries = []*common.Entry{}
+		}
+
+		entry := parser.ParseEntry(scanner.Text())
+		if entry == nil {
+			continue
+		}
+
+		entries = append(entries, entry)
+	}
+
+	if len(entries) > 0 {
+		err := eClient.BulkInsert(entries)
+		if err != nil {
+			eClient.UpdateUploadStatus(
+				parser.Checksum,
+				common.Error,
+			)
+			log.Println(err)
+			return
+		}
+	}
+
+	eClient.Refresh()
+
+	log.Printf(
+		"Processing complete: %s",
+		parser.Checksum,
+	)
+	eClient.UpdateUploadStatus(
+		parser.Checksum,
+		common.Complete,
+	)
+
+	eClient.setBusy(false)
+}
 
 /*
 BulkInsert - Index entries with BulkAPI

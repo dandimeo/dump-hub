@@ -1,4 +1,4 @@
-package common
+package esapi
 
 /*
 The MIT License (MIT)
@@ -23,47 +23,43 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-// Banner - Dump Hub Cool Banner
-const Banner = `                          
-   _                   _       _   
- _| |_ _ _____ ___ ___| |_ _ _| |_ 
-| . | | |     | . |___|   | | | . |
-|___|___|_|_|_|  _|   |_|_|___|___|
-              |_|       
-			             
-`
-
-/*
-Host - API Host
-Port - API Port
-BaseAPI - API root folder
-*/
-const (
-	Host    = "0.0.0.0"
-	Port    = 8080
-	BaseAPI = "/api/"
+import (
+	"sync"
 )
 
 /*
-EHost - Elasticsearch IP
-EPort - Elasticsearch port
+BulkWorker - Elasticsearch BulkAPI Worker
 */
-const (
-	EHost = "elasticsearch"
-	EPort = 9200
-)
+type BulkWorker struct {
+	mutex sync.Mutex
+	busy  bool
+	cSize int
+}
 
 /*
-Error - Error while indexing file
-Enqueued - File waiting to be indexed
-Processing - File indexing in progress
-Complete - File indexing complete
-Deleting - Deleting entries
+newWorker - Create BulkWorker
 */
-const (
-	Processing = 0
-	Deleting   = 1
-	Enqueued   = 2
-	Error      = 3
-	Complete   = 4
-)
+func (eClient *Client) newWorker(chunkSize int) *BulkWorker {
+	bulkW := BulkWorker{
+		cSize: chunkSize,
+	}
+	return &bulkW
+}
+
+/*
+isBusy - Get BulkWorker busy value
+*/
+func (eClient *Client) isBusy() bool {
+	eClient.bulkw.mutex.Lock()
+	defer eClient.bulkw.mutex.Unlock()
+	return eClient.bulkw.busy
+}
+
+/*
+setBusy - Set BulkWorker busy value
+*/
+func (eClient *Client) setBusy(value bool) {
+	eClient.bulkw.mutex.Lock()
+	defer eClient.bulkw.mutex.Unlock()
+	eClient.bulkw.busy = value
+}

@@ -36,7 +36,7 @@ func indexRoutine(id int, wg *sync.WaitGroup, e *Client, quitChan <-chan struct{
 	chunk := []*common.Entry{}
 
 	for run {
-		if len(chunk) >= ChunkSize {
+		if len(chunk) >= e.bulkw.cSize {
 			err := e.BulkInsert(chunk)
 			if err != nil {
 				log.Println(err)

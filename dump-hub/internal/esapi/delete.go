@@ -35,7 +35,17 @@ import (
 DeleteEntries - Delete entries associated to a file (checkSum)
 */
 func (eClient *Client) DeleteEntries(checkSum string) {
-	eClient.UpdateUploadStatus(checkSum, common.Deleting)
+	for {
+		if !eClient.isBusy() {
+			break
+		}
+	}
+	eClient.setBusy(true)
+
+	eClient.UpdateUploadStatus(
+		checkSum,
+		common.Deleting,
+	)
 
 	matchQ := elastic.NewMatchQuery(
 		"origin_id",
@@ -57,30 +67,42 @@ func (eClient *Client) DeleteEntries(checkSum string) {
 			break
 		}
 		if err != nil {
+			eClient.UpdateUploadStatus(
+				checkSum,
+				common.Error,
+			)
 			log.Println(err)
 		}
 		for _, hit := range result.Hits.Hits {
-			if len(chunk) > ChunkSize {
+			if len(chunk) > eClient.bulkw.cSize {
 				err := eClient.BulkDelete(chunk)
 				if err != nil {
+					eClient.UpdateUploadStatus(
+						checkSum,
+						common.Error,
+					)
 					log.Println(err)
+					return
 				}
 				chunk = []string{}
 			}
-
 			chunk = append(chunk, hit.Id)
 		}
 
 		if len(chunk) > 0 {
 			err := eClient.BulkDelete(chunk)
 			if err != nil {
+				eClient.UpdateUploadStatus(
+					checkSum,
+					common.Error,
+				)
 				log.Println(err)
+				return
 			}
 		}
 	}
 
 	eClient.Refresh()
-
 	_, err := eClient.client.Delete().
 		Index("dump-hub-status").
 		Id(checkSum).
@@ -88,10 +110,12 @@ func (eClient *Client) DeleteEntries(checkSum string) {
 	if err != nil {
 		log.Println(err)
 	}
+
+	eClient.setBusy(false)
 }
 
 /*
-BulkDelete :: Delete entries with BulkAPI
+BulkDelete - Delete entries with BulkAPI
 */
 func (eClient *Client) BulkDelete(chunk []string) error {
 	bulkRequest := eClient.client.Bulk()

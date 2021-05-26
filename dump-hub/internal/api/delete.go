@@ -28,6 +28,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/x0e1f/dump-hub/internal/common"
 	"github.com/x0e1f/dump-hub/internal/esapi"
 )
 
@@ -53,6 +54,7 @@ func delete(eClient *esapi.Client) http.HandlerFunc {
 		}
 
 		checkSum := deleteReq.Checksum
+		eClient.UpdateUploadStatus(checkSum, common.Enqueued)
 		go eClient.DeleteEntries(checkSum)
 
 		w.WriteHeader(http.StatusOK)

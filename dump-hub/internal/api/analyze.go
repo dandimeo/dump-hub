@@ -103,6 +103,9 @@ func analyze(eClient *esapi.Client) http.HandlerFunc {
 	}
 }
 
+/*
+analyzeFile - Parse and index the selected file
+*/
 func analyzeFile(eClient *esapi.Client, req analyzeRequest, fn string, cs string) {
 	filePath, err := filesys.MoveTemp(fn)
 	if err != nil {
@@ -116,9 +119,9 @@ func analyzeFile(eClient *esapi.Client, req analyzeRequest, fn string, cs string
 		Date:     date,
 		Filename: originalFilename,
 		Checksum: cs,
-		Status:   0,
+		Status:   common.Enqueued,
 	}
-	err = eClient.NewStatusDocument(&status, fn)
+	err = eClient.NewStatusDocument(&status, cs)
 	if err != nil {
 		log.Println(err)
 		return
