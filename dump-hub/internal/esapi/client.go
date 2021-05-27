@@ -65,7 +65,7 @@ func NewClient(ip string, port int) *Client {
 	log.Println("Connected to elasticsearch!")
 	e.client = client
 	e.ctx = context.Background()
-	e.bulkw = e.newWorker(100)
+	e.bulkw = e.newWorker(500)
 
 	err = e.CreateIndex("dump-hub", entryMapping)
 	if err != nil {

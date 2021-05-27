@@ -32,7 +32,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/x0e1f/dump-hub/internal/common"
 )
@@ -57,15 +56,8 @@ func ComputeChecksum(filePath string) (string, error) {
 EncodeFilename - Encode filename to base64
 */
 func EncodeFilename(fileName string) string {
-	fileName = strings.TrimSuffix(
-		fileName,
-		filepath.Ext(fileName),
-	)
-
-	/* Encode to base64 */
 	fileName = base64.StdEncoding.
 		EncodeToString([]byte(fileName))
-
 	return fileName
 }
 

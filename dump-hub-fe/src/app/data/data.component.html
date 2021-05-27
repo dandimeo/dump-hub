@@ -17,7 +17,6 @@
     </button>
   </div>
 </clr-modal>
-
 <div class="progress loop" *ngIf="loadingStatus">
   <progress></progress>
 </div>
@@ -48,7 +47,6 @@
             </ng-container>
             <ng-container *ngIf="upload.status == 1">
               <clr-spinner [clrSmall]="true"></clr-spinner>
-              Items...
             </ng-container>
             <ng-container *ngIf="upload.status == 2">
               <clr-icon shape="bundle" size="20"></clr-icon>
