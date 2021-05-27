@@ -32,7 +32,7 @@ import (
 )
 
 /*
-Parser :: Parser object
+Parser - Parser struct
 */
 type Parser struct {
 	Start     int
@@ -44,7 +44,7 @@ type Parser struct {
 }
 
 /*
-New :: Create new parser object
+New - Create new parser object
 */
 func New(pattern string, columns []int, filename string, filepath string) (*Parser, error) {
 	p := &Parser{}
@@ -72,33 +72,27 @@ func New(pattern string, columns []int, filename string, filepath string) (*Pars
 }
 
 /*
-ParseEntry :: Parse dump entry from file
+ParseEntry - Parse dump entry from file
 */
 func (p *Parser) ParseEntry(entry string) *common.Entry {
 	obj := &common.Entry{}
 	data := []string{}
 
-	/* If line empty */
 	if len(entry) < 1 {
 		return nil
 	}
 
-	/* Remove whitespaces from line */
 	line := strings.Replace(entry, " ", "", -1)
-
-	/* Split line with separator */
 	matches := strings.Split(line, p.Separator)
 	if len(matches) < 1 {
 		return nil
 	}
 
-	/* Iterate trough all fields */
 	for i, match := range matches {
 		if len(match) < 1 {
 			continue
 		}
 
-		/* Add value only if index in column */
 		for _, column := range p.Columns {
 			if i == column {
 				data = append(data, match)
@@ -106,12 +100,10 @@ func (p *Parser) ParseEntry(entry string) *common.Entry {
 		}
 	}
 
-	/* If object still empty */
 	if obj == nil {
 		return nil
 	}
 
-	/* Set origin fields */
 	obj.Origin = p.Filename
 	obj.OriginID = p.Checksum
 	obj.Data = data

@@ -26,7 +26,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 import "log"
 
 /*
-waitGreen :: Wait for cluster green status
+waitGreen - Wait for cluster green status
 */
 func (eClient *Client) waitGreen() {
 	log.Println("Waiting for cluster green status...")

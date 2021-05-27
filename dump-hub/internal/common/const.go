@@ -23,7 +23,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-// Banner - Dump Hub Cool Banner
+/*
+Banner - Dump Hub Cool Banner
+*/
 const Banner = `                          
    _                   _       _   
  _| |_ _ _____ ___ ___| |_ _ _| |_ 

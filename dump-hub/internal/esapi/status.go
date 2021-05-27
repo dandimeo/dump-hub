@@ -32,7 +32,7 @@ import (
 )
 
 /*
-GetStatus - Get status documents
+GetStatus - Get status documents (paginated)
 */
 func (eClient *Client) GetStatus(from int, size int) (*common.StatusResult, error) {
 	query := elastic.NewMatchAllQuery()

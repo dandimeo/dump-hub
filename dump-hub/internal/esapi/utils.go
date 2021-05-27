@@ -24,7 +24,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 /*
-IsAlreadyUploaded :: Check if file is already uploaded (by checksum)
+IsAlreadyUploaded - Check if file is already uploaded (by checksum)
 */
 func (eClient *Client) IsAlreadyUploaded(checkSum string) (bool, error) {
 	exists, err := eClient.client.Exists().
