@@ -25,7 +25,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 import (
 	"encoding/json"
-	"log"
 
 	"github.com/olivere/elastic/v7"
 	"github.com/x0e1f/dump-hub/internal/common"
@@ -54,8 +53,7 @@ func (eClient *Client) GetStatus(from int, size int) (*common.StatusResult, erro
 		status := common.Status{}
 		err := json.Unmarshal(hit.Source, &status)
 		if err != nil {
-			log.Println(err)
-			break
+			return nil, err
 		}
 
 		statusData.Results = append(
@@ -66,6 +64,24 @@ func (eClient *Client) GetStatus(from int, size int) (*common.StatusResult, erro
 	statusData.Tot = int(results.Hits.TotalHits.Value)
 
 	return &statusData, nil
+}
+
+func (eClient *Client) GetDocumentStatus(checkSum string) (*common.Status, error) {
+	result, err := eClient.client.Get().
+		Index("dump-hub-status").
+		Id(checkSum).
+		Do(eClient.ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	status := common.Status{}
+	err = json.Unmarshal(result.Source, &status)
+	if err != nil {
+		return nil, err
+	}
+
+	return &status, nil
 }
 
 /*

@@ -57,7 +57,7 @@ func (eClient *Client) cleanStatus() {
 
 	matchQ := elastic.NewMatchQuery(
 		"status",
-		0,
+		common.Processing,
 	)
 	query := elastic.
 		NewBoolQuery().
@@ -87,7 +87,7 @@ func (eClient *Client) cleanStatus() {
 
 	matchQ = elastic.NewMatchQuery(
 		"status",
-		2,
+		common.Deleting,
 	)
 	query = elastic.
 		NewBoolQuery().

@@ -5,7 +5,8 @@ const entryMapping = `
   "settings": {
     "number_of_shards": 1,
     "number_of_replicas": 0,
-    "refresh_interval" : "30s"
+    "refresh_interval" : "30s",
+    "codec": "best_compression" 
   },
   "mappings": {
     "dynamic_templates": [

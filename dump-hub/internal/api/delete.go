@@ -52,8 +52,23 @@ func delete(eClient *esapi.Client) http.HandlerFunc {
 			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
-
 		checkSum := deleteReq.Checksum
+
+		currentStatus, err := eClient.GetDocumentStatus(checkSum)
+		if err != nil {
+			http.Error(w, "", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		isComplete := currentStatus.Status == common.Complete
+		isError := currentStatus.Status == common.Error
+		if !isComplete && !isError {
+			http.Error(w, "", http.StatusTeapot)
+			log.Println(err)
+			return
+		}
+
 		eClient.UpdateUploadStatus(checkSum, common.Enqueued)
 		go eClient.DeleteEntries(checkSum)
 
