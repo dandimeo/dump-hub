@@ -25,6 +25,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 import (
 	"encoding/json"
+	"io"
+	"log"
 
 	"github.com/olivere/elastic/v7"
 	"github.com/x0e1f/dump-hub/internal/common"
@@ -66,6 +68,9 @@ func (eClient *Client) GetStatus(from int, size int) (*common.StatusResult, erro
 	return &statusData, nil
 }
 
+/*
+GetDocumentStatus - Get the status of a single document (checksum)
+*/
 func (eClient *Client) GetDocumentStatus(checkSum string) (*common.Status, error) {
 	result, err := eClient.client.Get().
 		Index("dump-hub-status").
@@ -118,6 +123,66 @@ func (eClient *Client) UpdateUploadStatus(checkSum string, newStatus int) error 
 		Do(eClient.ctx)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+/*
+cleanStatus - Clean unprocessed files and update status (on restart)
+*/
+func (eClient *Client) cleanStatus() {
+	log.Println("Cleaning status of unprocessed files...")
+
+	matchQ := elastic.NewMatchQuery(
+		"status",
+		common.Processing,
+	)
+	query := elastic.
+		NewBoolQuery().
+		Must(matchQ)
+	eClient.cleanStatusType(query)
+
+	matchQ = elastic.NewMatchQuery(
+		"status",
+		common.Deleting,
+	)
+	query = elastic.
+		NewBoolQuery().
+		Must(matchQ)
+	eClient.cleanStatusType(query)
+
+	matchQ = elastic.NewMatchQuery(
+		"status",
+		common.Enqueued,
+	)
+	query = elastic.
+		NewBoolQuery().
+		Must(matchQ)
+	eClient.cleanStatusType(query)
+}
+
+func (eClient *Client) cleanStatusType(query *elastic.BoolQuery) error {
+	scroll := eClient.client.Scroll().
+		Index("dump-hub-status").
+		Query(query).
+		Size(1)
+
+	for {
+		result, err := scroll.Do(eClient.ctx)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Println(err)
+		}
+
+		for _, hit := range result.Hits.Hits {
+			err = eClient.UpdateUploadStatus(hit.Id, common.Error)
+			if err != nil {
+				log.Println(err)
+			}
+		}
 	}
 
 	return nil

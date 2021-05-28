@@ -31,10 +31,26 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/x0e1f/dump-hub/internal/common"
 )
+
+/*
+CleanTMP - Clean tmp folder
+*/
+func CleanTMP() {
+	log.Println("Cleaning tmp folder...")
+
+	dir, err := ioutil.ReadDir("/tmp")
+	if err != nil {
+		log.Println(err)
+	}
+	for _, d := range dir {
+		os.Remove(path.Join("/tmp", d.Name()))
+	}
+}
 
 /*
 ComputeChecksum - Compute file checksum

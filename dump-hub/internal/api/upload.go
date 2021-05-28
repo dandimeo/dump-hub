@@ -44,7 +44,6 @@ func upload() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(1024 * 1024)
 
-		/* Get ID */
 		id := r.FormValue("id")
 		if len(id) <= 0 {
 			log.Printf("(ERROR) (%s) ID value not found", r.URL)
@@ -52,7 +51,6 @@ func upload() http.HandlerFunc {
 			return
 		}
 
-		/* Get Filename */
 		fileName := r.FormValue("filename")
 		if len(fileName) <= 0 {
 			log.Printf("(ERROR) (%s) filename value not found", r.URL)
@@ -60,7 +58,6 @@ func upload() http.HandlerFunc {
 			return
 		}
 
-		/* Get Offset */
 		raw := r.FormValue("offset")
 		if len(raw) <= 0 {
 			log.Println("(ERROR) offset value not found")
@@ -74,7 +71,6 @@ func upload() http.HandlerFunc {
 			return
 		}
 
-		/* Get File Size */
 		raw = r.FormValue("file_size")
 		if len(raw) <= 0 {
 			log.Println("(ERROR) file_size value not found")
@@ -88,14 +84,12 @@ func upload() http.HandlerFunc {
 			return
 		}
 
-		/* Limit File Size */
 		if fileSize > filesys.MaxFileSize {
 			log.Println("(ERROR) MAX_FILE_SIZE reached")
 			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
 
-		/* Get File Data */
 		data, metadata, err := r.FormFile("data")
 		if err != nil {
 			log.Printf("(ERROR) (%s) %s", r.URL, err)
@@ -104,7 +98,6 @@ func upload() http.HandlerFunc {
 		}
 		defer data.Close()
 
-		/* Write to tmp folder */
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(data)
 		filePath := filepath.Join("/tmp/", id)
@@ -119,7 +112,6 @@ func upload() http.HandlerFunc {
 			return
 		}
 
-		/* Limit File Type */
 		mtype, err := mimetype.DetectFile(filePath)
 		if err != nil {
 			log.Printf("(ERROR) %s", err)
@@ -134,7 +126,6 @@ func upload() http.HandlerFunc {
 			return
 		}
 
-		/* Upload completed */
 		if (offset + int(metadata.Size)) == fileSize {
 			err := finishUpload(id, fileName)
 			if err != nil {

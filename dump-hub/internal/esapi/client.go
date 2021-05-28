@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/olivere/elastic/v7"
+	"github.com/x0e1f/dump-hub/internal/filesys"
 )
 
 /*
@@ -78,7 +79,7 @@ func NewClient(ip string, port int) *Client {
 
 	e.waitGreen()
 	e.cleanStatus()
-	cleanTmp()
+	filesys.CleanTMP()
 
 	return e
 }
