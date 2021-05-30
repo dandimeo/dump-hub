@@ -1,5 +1,11 @@
 package common
 
+import (
+	"io"
+	"log"
+	"os"
+)
+
 /*
 The MIT License (MIT)
 Copyright (c) 2021 Davide Pataracchia
@@ -69,3 +75,25 @@ const (
 	Error      = 3
 	Complete   = 4
 )
+
+// Default GO init func to set log file redirection globally
+func init() {
+	filename := "/var/log/dump-hub/dump-hub.log" // Needs root permission to access file
+
+	logFile, err := os.OpenFile(
+		filename,
+		os.O_CREATE|os.O_APPEND|os.O_WRONLY,
+		0600,
+	)
+
+	if err == nil {
+		defer logFile.Close()
+
+		logWriter := io.MultiWriter(os.Stdout, logFile)
+		log.SetOutput(logWriter)
+	} else {
+		log.Printf("[ERROR] error creating logfile %s", err.Error())
+		log.Println("logging to stdout only")
+		log.SetOutput(os.Stdout)
+	}
+}
